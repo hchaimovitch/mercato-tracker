@@ -1,0 +1,1199 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,500,0..1,0&display=block" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; }
+  a { color: #f5b301; text-decoration: none; }
+  a:hover { color: #f5cf5a; }
+  ::-webkit-scrollbar { width: 0; height: 0; }
+</style>
+</helmet>
+
+<section style="min-height:100vh;background:#0a0908;font-family:Manrope,system-ui,sans-serif;padding:56px 64px 96px;display:flex;flex-direction:column;gap:36px">
+
+  <div style="display:flex;flex-direction:column;gap:6px;max-width:900px">
+    <div style="display:flex;align-items:center;gap:12px">
+      <div style="width:10px;height:10px;border-radius:2px;background:linear-gradient(135deg,#f5b301,#e0870a);box-shadow:0 0 14px rgba(245,179,1,0.55)"></div>
+      <div style="font-size:13px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:#f5b301">Mercato Tracker · Big 5</div>
+    </div>
+    <div style="font-size:30px;font-weight:800;color:#f4f1ea;letter-spacing:-0.5px">Flux, historique &amp; vue championnat</div>
+    <div style="font-size:14px;color:#a8a196;max-width:660px;line-height:1.5">1a est le prototype complet : sélecteur de fenêtre de mercato (Été 2026 en cours + fenêtres clôturées sans rumeurs), flux cliquable vers la fiche face-à-face, et onglet Ligues qui descend jusqu'au club avec ses arrivées et départs. 1b garde la variante terminal compact.</div>
+  </div>
+
+  <div style="display:flex;flex-wrap:wrap;gap:56px;align-items:flex-start">
+
+    <!-- ===================== 1a — APP COMPLÈTE ===================== -->
+    <div id="1a" style="display:flex;flex-direction:column;gap:14px;align-items:flex-start">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="border:1px solid rgba(245,179,1,0.6);color:#f5b301;padding:3px 9px;border-radius:6px;font-size:12px;font-weight:800;letter-spacing:0.5px">1a</span>
+        <span style="font-size:13px;font-weight:600;color:#a8a196;letter-spacing:0.3px">App — flux · historique · championnat → club</span>
+      </div>
+
+      <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="{{ true }}" hint-size="402px,874px">
+
+        <!-- ===== ONGLETS ===== -->
+        <sc-if value="{{ showAppA }}" hint-placeholder-val="{{ true }}">
+        <div style="height:100%;display:flex;flex-direction:column;background:#0f0e0c;color:#f4f1ea;font-family:Manrope,system-ui,sans-serif">
+
+          <!-- FLUX -->
+          <sc-if value="{{ showFluxA }}" hint-placeholder-val="{{ true }}">
+          <div style="flex:1;min-height:0;display:flex;flex-direction:column">
+
+            <div style="padding:54px 16px 12px;display:flex;flex-direction:column;gap:11px;background:linear-gradient(180deg,#171410,#0f0e0c);border-bottom:1px solid rgba(255,255,255,0.06);flex-shrink:0">
+              <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:8px">
+                <div style="min-width:0">
+                  <div style="font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#8a8377">{{ fluxKicker }}</div>
+                  <div style="font-size:26px;font-weight:800;letter-spacing:-0.5px;line-height:1.05">{{ fluxTitle }}</div>
+                </div>
+                <div style="display:flex;align-items:center;gap:6px;height:28px;padding:0 11px;border-radius:14px;border:1px solid rgba(245,179,1,0.35);background:rgba(245,179,1,0.08);color:#f5cf5a;font-size:12px;font-weight:700;flex-shrink:0">
+                  <span style="width:6px;height:6px;border-radius:50%;background:{{ windowDot }};box-shadow:0 0 8px {{ windowDot }}"></span>{{ windowShort }}
+                </div>
+              </div>
+
+              <!-- sélecteur de fenêtre -->
+              <div style="display:flex;gap:5px;background:#120f0b;border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:4px">
+                <sc-for list="{{ windowChips }}" as="w" hint-placeholder-count="3">
+                  <button onClick="{{ w.onClick }}" style="position:relative;flex:1;height:44px;border:none;border-radius:9px;cursor:pointer;font-family:Manrope;font-size:12px;font-weight:800;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;background:{{ w.bg }};color:{{ w.color }};box-shadow:{{ w.glow }}">
+                    <span>{{ w.label }}</span>
+                    <span style="font-size:8.5px;font-weight:700;letter-spacing:0.3px;opacity:0.85">{{ w.sub }}</span>
+                  </button>
+                </sc-for>
+              </div>
+
+              <sc-if value="{{ windowClosed }}" hint-placeholder-val="{{ false }}">
+                <div style="display:flex;align-items:center;gap:7px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:9px;padding:7px 10px;font-size:11px;font-weight:600;color:#a8a196">
+                  <span style="color:#4cc38a">✓</span> Mercato clôturé — transferts officialisés, aucune rumeur.
+                </div>
+              </sc-if>
+
+              <div style="display:flex;gap:8px;overflow-x:auto;margin:0 -16px;padding:2px 16px 4px">
+                <sc-for list="{{ leaguesA }}" as="lg" hint-placeholder-count="6">
+                  <button onClick="{{ lg.onClick }}" style="position:relative;height:44px;padding:0 15px;border-radius:22px;border:1px solid rgba(255,255,255,0.09);background:#191510;color:#e8e2d8;font-family:Manrope;font-size:13px;font-weight:600;white-space:nowrap;cursor:pointer;display:flex;align-items:center;gap:8px;flex-shrink:0" style-hover="border-color:rgba(245,179,1,0.4)">
+                    <sc-if value="{{ lg.active }}" hint-placeholder-val="{{ false }}">
+                      <div style="position:absolute;inset:-1px;border-radius:22px;border:1.5px solid #f5b301;box-shadow:0 0 18px rgba(245,179,1,0.5),inset 0 0 14px rgba(245,179,1,0.12);pointer-events:none"></div>
+                    </sc-if>
+                    <span style="position:relative;width:8px;height:8px;border-radius:50%;background:{{ lg.color }}"></span>
+                    <span style="position:relative">{{ lg.name }}</span>
+                  </button>
+                </sc-for>
+              </div>
+            </div>
+
+            <div style="flex:1;overflow-y:auto;min-height:0;padding:14px 16px 16px;display:flex;flex-direction:column;gap:13px">
+              <sc-for list="{{ transfersA }}" as="t" hint-placeholder-count="4">
+                <div onClick="{{ t.onOpen }}" style="position:relative;background:#18140f;border:1px solid rgba(255,255,255,0.07);border-radius:18px;padding:15px;display:flex;flex-direction:column;gap:13px;cursor:pointer" style-hover="border-color:rgba(245,179,1,0.45)">
+                  <sc-if value="{{ t.breaking }}" hint-placeholder-val="{{ false }}">
+                    <div style="position:absolute;inset:0;border-radius:18px;border:1px solid rgba(245,179,1,0.55);box-shadow:0 0 26px rgba(245,179,1,0.22);pointer-events:none"></div>
+                  </sc-if>
+
+                  <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+                    <div style="display:flex;align-items:center;gap:7px;min-width:0">
+                      <span style="width:8px;height:8px;border-radius:50%;flex-shrink:0;background:{{ t.leagueColor }}"></span>
+                      <span style="font-size:11px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:#a8a196;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ t.leagueName }}</span>
+                      <sc-if value="{{ t.breaking }}" hint-placeholder-val="{{ false }}">
+                        <span style="display:inline-flex;align-items:center;gap:5px;height:20px;padding:0 8px;border-radius:5px;background:linear-gradient(135deg,#f5b301,#e0870a);color:#1a1206;font-size:10px;font-weight:800;letter-spacing:0.7px">À LA UNE</span>
+                      </sc-if>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+                      <span style="font-size:11px;font-weight:600;color:#8a8377;white-space:nowrap">{{ t.updated }}</span>
+                      <span style="font-size:16px;font-weight:700;color:#f5b301">›</span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div style="font-size:20px;font-weight:800;letter-spacing:-0.4px;line-height:1.1">{{ t.player }}</div>
+                    <div style="font-size:12.5px;font-weight:500;color:#a8a196;margin-top:2px">{{ t.meta }}</div>
+                  </div>
+
+                  <div style="display:flex;align-items:center;gap:11px;background:#120f0b;border:1px solid rgba(255,255,255,0.05);border-radius:13px;padding:11px 12px">
+                    <div style="display:flex;align-items:center;gap:9px;flex:1;min-width:0">
+                      <div style="position:relative;width:36px;height:36px;border-radius:9px;overflow:hidden;flex-shrink:0;background:{{ t.from.color }};display:flex;align-items:center;justify-content:center">
+                        <span style="position:absolute;font-size:11px;font-weight:800;color:#f4f1ea">{{ t.from.abbr }}</span>
+                        <x-import component-from-global-scope="image-slot" from="./image-slot.js" id="{{ t.fromLogoId }}" shape="rounded" radius="9" placeholder="Logo" hint-size="100%,100%"></x-import>
+                      </div>
+                      <div style="min-width:0">
+                        <div style="font-size:9px;font-weight:700;letter-spacing:0.8px;color:#8a8377">SORTANT</div>
+                        <div style="font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ t.from.name }}</div>
+                      </div>
+                    </div>
+                    <div style="font-size:20px;font-weight:800;color:#f5b301;flex-shrink:0">→</div>
+                    <div style="display:flex;align-items:center;gap:9px;flex:1;min-width:0;justify-content:flex-end;text-align:right">
+                      <div style="min-width:0">
+                        <div style="font-size:9px;font-weight:700;letter-spacing:0.8px;color:#8a8377">ENTRANT</div>
+                        <div style="font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ t.to.name }}</div>
+                      </div>
+                      <div style="position:relative;width:36px;height:36px;border-radius:9px;overflow:hidden;flex-shrink:0;background:{{ t.to.color }};display:flex;align-items:center;justify-content:center">
+                        <span style="position:absolute;font-size:11px;font-weight:800;color:#f4f1ea">{{ t.to.abbr }}</span>
+                        <x-import component-from-global-scope="image-slot" from="./image-slot.js" id="{{ t.toLogoId }}" shape="rounded" radius="9" placeholder="Logo" hint-size="100%,100%"></x-import>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:12px">
+                    <div>
+                      <div style="font-size:10px;font-weight:700;letter-spacing:1px;color:#8a8377">MONTANT</div>
+                      <div style="font-size:24px;font-weight:800;letter-spacing:-0.5px;color:#f5b301;line-height:1">{{ t.fee }}</div>
+                    </div>
+                    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+                      <div style="display:flex;align-items:center;gap:6px">
+                        <span style="font-family:monospace;font-size:13px;letter-spacing:1px;color:{{ t.tierColor }}">{{ t.signalGlyph }}</span>
+                        <span style="font-size:11px;font-weight:700;color:{{ t.tierColor }}">{{ t.signalLabel }}</span>
+                      </div>
+                      <div style="display:flex;align-items:baseline;gap:3px">
+                        <span style="font-size:22px;font-weight:800;letter-spacing:-0.5px;line-height:1">{{ t.reliability }}</span>
+                        <span style="font-size:12px;font-weight:700;color:#a8a196">%</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div style="display:flex;flex-direction:column;gap:6px">
+                    <div style="display:flex;gap:4px">
+                      <sc-for list="{{ t.segs }}" as="seg" hint-placeholder-count="6">
+                        <div style="flex:1;height:5px;border-radius:3px;background:{{ seg.bg }}"></div>
+                      </sc-for>
+                    </div>
+                    <div style="display:flex;align-items:center;justify-content:space-between">
+                      <span style="font-size:11.5px;font-weight:700;color:#e8e2d8">{{ t.stepLabel }}</span>
+                      <span style="font-size:11px;font-weight:600;color:#8a8377">Étape {{ t.step }}/6</span>
+                    </div>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+
+          </div>
+          </sc-if>
+
+          <!-- LIGUES -->
+          <sc-if value="{{ showLiguesA }}" hint-placeholder-val="{{ false }}">
+          <div style="flex:1;min-height:0;display:flex;flex-direction:column">
+            <div style="padding:54px 16px 14px;display:flex;flex-direction:column;gap:11px;background:linear-gradient(180deg,#171410,#0f0e0c);border-bottom:1px solid rgba(255,255,255,0.06);flex-shrink:0">
+              <div>
+                <div style="font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#8a8377">Big 5 · {{ windowFull }}</div>
+                <div style="font-size:26px;font-weight:800;letter-spacing:-0.5px;line-height:1.05">Championnats</div>
+              </div>
+              <div style="display:flex;gap:5px;background:#120f0b;border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:4px">
+                <sc-for list="{{ windowChips }}" as="w" hint-placeholder-count="3">
+                  <button onClick="{{ w.onClick }}" style="position:relative;flex:1;height:44px;border:none;border-radius:9px;cursor:pointer;font-family:Manrope;font-size:12px;font-weight:800;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;background:{{ w.bg }};color:{{ w.color }};box-shadow:{{ w.glow }}">
+                    <span>{{ w.label }}</span>
+                    <span style="font-size:8.5px;font-weight:700;letter-spacing:0.3px;opacity:0.85">{{ w.sub }}</span>
+                  </button>
+                </sc-for>
+              </div>
+              <div style="display:flex;gap:8px">
+                <div style="flex:1;background:#18140f;border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:10px 12px">
+                  <div style="font-size:22px;font-weight:800;letter-spacing:-0.5px;line-height:1">{{ totalCount }}</div>
+                  <div style="font-size:10.5px;font-weight:600;color:#8a8377;margin-top:2px">{{ totalCountLabel }}</div>
+                </div>
+                <div style="flex:1;background:#18140f;border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:10px 12px">
+                  <div style="font-size:22px;font-weight:800;letter-spacing:-0.5px;line-height:1;color:#f5b301">{{ totalMoney }}</div>
+                  <div style="font-size:10.5px;font-weight:600;color:#8a8377;margin-top:2px">volume total</div>
+                </div>
+              </div>
+            </div>
+            <div style="flex:1;overflow-y:auto;min-height:0;padding:12px 16px 16px;display:flex;flex-direction:column;gap:10px">
+              <sc-for list="{{ leaguesOverview }}" as="l" hint-placeholder-count="5">
+                <button onClick="{{ l.onOpen }}" style="width:100%;text-align:left;background:#18140f;border:1px solid rgba(255,255,255,0.07);border-radius:16px;padding:14px;display:flex;align-items:center;gap:12px;cursor:pointer;font-family:Manrope" style-hover="border-color:rgba(245,179,1,0.45)">
+                  <div style="width:44px;height:44px;border-radius:12px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#0f0e0c;background:{{ l.color }}">{{ l.short }}</div>
+                  <div style="flex:1;min-width:0">
+                    <div style="font-size:15px;font-weight:800;color:#f4f1ea">{{ l.name }}</div>
+                    <div style="font-size:11.5px;font-weight:600;color:#8a8377;margin-top:1px">{{ l.count }} transferts · <span style="color:#f5cf5a">{{ l.totalStr }}</span></div>
+                    <div style="margin-top:8px;height:5px;border-radius:3px;background:rgba(255,255,255,0.08);overflow:hidden"><div style="height:100%;border-radius:3px;background:linear-gradient(90deg,#f5b301,#e0870a);width:{{ l.barPct }}"></div></div>
+                  </div>
+                  <span style="font-size:16px;font-weight:700;color:#f5b301;flex-shrink:0">›</span>
+                </button>
+              </sc-for>
+            </div>
+          </div>
+          </sc-if>
+
+          <!-- SUIVIS -->
+          <sc-if value="{{ showSuivisA }}" hint-placeholder-val="{{ false }}">
+          <div style="flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:13px;padding:40px 34px 80px;text-align:center">
+            <div style="width:58px;height:58px;border-radius:16px;border:1px solid rgba(245,179,1,0.3);background:rgba(245,179,1,0.06);display:flex;align-items:center;justify-content:center;font-size:24px;color:#f5b301">★</div>
+            <div style="font-size:17px;font-weight:800">Aucun transfert suivi</div>
+            <div style="font-size:12.5px;font-weight:500;color:#8a8377;max-width:230px;line-height:1.55">Touche « Suivre ce transfert » sur une fiche pour le retrouver ici et recevoir ses mises à jour.</div>
+          </div>
+          </sc-if>
+
+          <!-- ALERTES -->
+          <sc-if value="{{ showAlertesA }}" hint-placeholder-val="{{ false }}">
+          <div style="flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:13px;padding:40px 34px 80px;text-align:center">
+            <div style="width:58px;height:58px;border-radius:16px;border:1px solid rgba(245,179,1,0.3);background:rgba(245,179,1,0.06);display:flex;align-items:center;justify-content:center;font-size:24px;color:#f5b301">◉</div>
+            <div style="font-size:17px;font-weight:800">Pas d'alerte active</div>
+            <div style="font-size:12.5px;font-weight:500;color:#8a8377;max-width:230px;line-height:1.55">Crée une alerte sur un joueur ou un club pour être notifié à chaque changement de statut.</div>
+          </div>
+          </sc-if>
+
+          <!-- tab bar -->
+          <div style="flex-shrink:0;display:flex;justify-content:space-around;align-items:flex-start;padding:9px 8px 30px;background:linear-gradient(0deg,#171410,#0f0e0c);border-top:1px solid rgba(255,255,255,0.07)">
+            <sc-for list="{{ tabsA }}" as="tb" hint-placeholder-count="4">
+              <button onClick="{{ tb.onClick }}" style="position:relative;flex:1;min-width:44px;height:48px;background:transparent;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-family:Manrope">
+                <sc-if value="{{ tb.active }}" hint-placeholder-val="{{ false }}">
+                  <div style="position:absolute;top:-2px;width:34px;height:34px;border-radius:12px;background:radial-gradient(circle,rgba(245,179,1,0.28),rgba(245,179,1,0) 70%)"></div>
+                </sc-if>
+                <span style="position:relative;font-family:'Material Symbols Outlined';font-size:23px;line-height:1;color:{{ tb.color }};font-variation-settings:{{ tb.fill }};text-shadow:{{ tb.glow }}">{{ tb.icon }}</span>
+                <span style="position:relative;font-size:10px;font-weight:700;letter-spacing:0.2px;color:{{ tb.color }}">{{ tb.label }}</span>
+              </button>
+            </sc-for>
+          </div>
+        </div>
+        </sc-if>
+
+        <!-- ===== ÉCRAN LIGUE → CLUBS ===== -->
+        <sc-if value="{{ showLeagueA }}" hint-placeholder-val="{{ false }}">
+        <div style="height:100%;display:flex;flex-direction:column;background:#0f0e0c;color:#f4f1ea;font-family:Manrope,system-ui,sans-serif">
+          <div style="flex-shrink:0;padding:52px 16px 14px;background:linear-gradient(180deg,#1c1710,#0f0e0c);border-bottom:1px solid rgba(255,255,255,0.06);display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;align-items:center;gap:11px">
+              <button onClick="{{ backToLigues }}" style="width:44px;height:44px;border-radius:12px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);cursor:pointer;display:flex;align-items:center;justify-content:center;color:#e8e2d8;font-size:18px;flex-shrink:0" style-hover="background:rgba(255,255,255,0.08)">‹</button>
+              <div style="width:40px;height:40px;border-radius:11px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#0f0e0c;background:{{ lgView.color }}">{{ lgView.short }}</div>
+              <div style="min-width:0">
+                <div style="font-size:20px;font-weight:800;letter-spacing:-0.4px;line-height:1.05">{{ lgView.name }}</div>
+                <div style="font-size:11px;font-weight:600;color:#8a8377">{{ windowFull }} · {{ lgView.clubCount }} clubs actifs</div>
+              </div>
+            </div>
+            <div style="display:flex;gap:8px">
+              <div style="flex:1;background:#18140f;border:1px solid rgba(76,195,138,0.25);border-radius:12px;padding:9px 11px">
+                <div style="font-size:9.5px;font-weight:700;letter-spacing:0.6px;color:#4cc38a">↓ ARRIVÉES</div>
+                <div style="font-size:19px;font-weight:800;letter-spacing:-0.4px;margin-top:1px">{{ lgView.arrTotal }}</div>
+              </div>
+              <div style="flex:1;background:#18140f;border:1px solid rgba(245,179,1,0.25);border-radius:12px;padding:9px 11px">
+                <div style="font-size:9.5px;font-weight:700;letter-spacing:0.6px;color:#f5cf5a">↑ DÉPARTS</div>
+                <div style="font-size:19px;font-weight:800;letter-spacing:-0.4px;margin-top:1px">{{ lgView.depTotal }}</div>
+              </div>
+              <div style="flex:1;background:#18140f;border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:9px 11px">
+                <div style="font-size:9.5px;font-weight:700;letter-spacing:0.6px;color:#8a8377">VOLUME</div>
+                <div style="font-size:19px;font-weight:800;letter-spacing:-0.4px;margin-top:1px;color:#f5b301">{{ lgView.volume }}</div>
+              </div>
+            </div>
+          </div>
+
+          <div style="flex:1;overflow-y:auto;min-height:0;padding:12px 16px 24px;display:flex;flex-direction:column;gap:9px">
+            <div style="font-size:11px;font-weight:700;letter-spacing:1px;color:#8a8377;padding:2px 2px 0">CLUBS · TRIÉS PAR ACTIVITÉ</div>
+            <sc-for list="{{ lgView.clubs }}" as="c" hint-placeholder-count="4">
+              <button onClick="{{ c.onOpen }}" style="width:100%;text-align:left;background:#18140f;border:1px solid rgba(255,255,255,0.07);border-radius:15px;padding:12px;display:flex;align-items:center;gap:11px;cursor:pointer;font-family:Manrope" style-hover="border-color:rgba(245,179,1,0.45)">
+                <div style="position:relative;width:42px;height:42px;border-radius:11px;overflow:hidden;flex-shrink:0;background:{{ c.color }};display:flex;align-items:center;justify-content:center">
+                  <span style="position:absolute;font-size:12px;font-weight:800;color:#f4f1ea">{{ c.abbr }}</span>
+                  <x-import component-from-global-scope="image-slot" from="./image-slot.js" id="{{ c.logoId }}" shape="rounded" radius="11" placeholder="Logo" hint-size="100%,100%"></x-import>
+                </div>
+                <div style="flex:1;min-width:0">
+                  <div style="font-size:15px;font-weight:800;color:#f4f1ea">{{ c.name }}</div>
+                  <div style="display:flex;align-items:center;gap:9px;margin-top:3px">
+                    <span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:#4cc38a">↓ {{ c.arr }} <span style="color:#8a8377;font-weight:600">arr.</span></span>
+                    <span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:#f5cf5a">↑ {{ c.dep }} <span style="color:#8a8377;font-weight:600">dép.</span></span>
+                  </div>
+                </div>
+                <div style="text-align:right;flex-shrink:0">
+                  <div style="font-size:9px;font-weight:700;letter-spacing:0.5px;color:#8a8377">SOLDE</div>
+                  <div style="font-size:13px;font-weight:800;letter-spacing:-0.3px;color:{{ c.netColor }}">{{ c.netStr }}</div>
+                </div>
+                <span style="font-size:16px;font-weight:700;color:#f5b301;flex-shrink:0">›</span>
+              </button>
+            </sc-for>
+          </div>
+        </div>
+        </sc-if>
+
+        <!-- ===== ÉCRAN CLUB → ARRIVÉES / DÉPARTS ===== -->
+        <sc-if value="{{ showClubA }}" hint-placeholder-val="{{ false }}">
+        <div style="height:100%;display:flex;flex-direction:column;background:#0f0e0c;color:#f4f1ea;font-family:Manrope,system-ui,sans-serif">
+          <div style="flex-shrink:0;padding:52px 16px 15px;background:linear-gradient(180deg,#1c1710,#0f0e0c);border-bottom:1px solid rgba(255,255,255,0.06);display:flex;flex-direction:column;gap:13px">
+            <div style="display:flex;align-items:center;gap:11px">
+              <button onClick="{{ backToLeague }}" style="width:44px;height:44px;border-radius:12px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);cursor:pointer;display:flex;align-items:center;justify-content:center;color:#e8e2d8;font-size:18px;flex-shrink:0" style-hover="background:rgba(255,255,255,0.08)">‹</button>
+              <div style="position:relative;width:48px;height:48px;border-radius:13px;overflow:hidden;flex-shrink:0;background:{{ clubView.color }};display:flex;align-items:center;justify-content:center">
+                <span style="position:absolute;font-size:14px;font-weight:800;color:#f4f1ea">{{ clubView.abbr }}</span>
+                <x-import component-from-global-scope="image-slot" from="./image-slot.js" id="{{ clubView.logoId }}" shape="rounded" radius="13" placeholder="Logo" hint-size="100%,100%"></x-import>
+              </div>
+              <div style="min-width:0">
+                <div style="font-size:21px;font-weight:800;letter-spacing:-0.4px;line-height:1.05">{{ clubView.name }}</div>
+                <div style="font-size:11px;font-weight:600;color:#8a8377">{{ clubView.leagueName }} · {{ windowFull }}</div>
+              </div>
+            </div>
+            <div style="display:flex;gap:8px">
+              <div style="flex:1;background:#16120d;border:1px solid rgba(255,255,255,0.06);border-radius:11px;padding:8px 11px">
+                <div style="font-size:9px;font-weight:700;letter-spacing:0.5px;color:#4cc38a">RECRUTEMENT</div>
+                <div style="font-size:15px;font-weight:800;letter-spacing:-0.3px;margin-top:2px">{{ clubView.inStr }}</div>
+              </div>
+              <div style="flex:1;background:#16120d;border:1px solid rgba(255,255,255,0.06);border-radius:11px;padding:8px 11px">
+                <div style="font-size:9px;font-weight:700;letter-spacing:0.5px;color:#f5cf5a">VENTES</div>
+                <div style="font-size:15px;font-weight:800;letter-spacing:-0.3px;margin-top:2px">{{ clubView.outStr }}</div>
+              </div>
+              <div style="flex:1;background:#16120d;border:1px solid rgba(255,255,255,0.06);border-radius:11px;padding:8px 11px">
+                <div style="font-size:9px;font-weight:700;letter-spacing:0.5px;color:#8a8377">SOLDE NET</div>
+                <div style="font-size:15px;font-weight:800;letter-spacing:-0.3px;margin-top:2px;color:{{ clubView.netColor }}">{{ clubView.netStr }}</div>
+              </div>
+            </div>
+          </div>
+
+          <div style="flex:1;overflow-y:auto;min-height:0;padding:14px 16px 24px;display:flex;flex-direction:column;gap:16px">
+
+            <div style="display:flex;flex-direction:column;gap:9px">
+              <div style="display:flex;align-items:center;gap:8px">
+                <span style="width:26px;height:26px;border-radius:8px;background:rgba(76,195,138,0.14);color:#4cc38a;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800">↓</span>
+                <span style="font-size:13px;font-weight:800;letter-spacing:0.3px">Arrivées</span>
+                <span style="font-size:11px;font-weight:700;color:#8a8377">{{ clubView.arrCount }}</span>
+              </div>
+              <sc-if value="{{ clubView.hasArr }}" hint-placeholder-val="{{ true }}">
+                <sc-for list="{{ clubView.arrivals }}" as="m" hint-placeholder-count="2">
+                  <button onClick="{{ m.onOpen }}" style="width:100%;text-align:left;position:relative;display:flex;align-items:center;gap:10px;background:#16120d;border:1px solid rgba(255,255,255,0.06);border-radius:13px;padding:11px 12px;cursor:pointer;font-family:Manrope;overflow:hidden" style-hover="border-color:rgba(76,195,138,0.4)">
+                    <div style="position:absolute;left:0;top:0;bottom:0;width:3px;background:#4cc38a"></div>
+                    <div style="position:relative;width:34px;height:34px;border-radius:9px;overflow:hidden;flex-shrink:0;background:{{ m.otherColor }};display:flex;align-items:center;justify-content:center">
+                      <span style="position:absolute;font-size:10px;font-weight:800;color:#f4f1ea">{{ m.otherAbbr }}</span>
+                      <x-import component-from-global-scope="image-slot" from="./image-slot.js" id="{{ m.otherLogoId }}" shape="rounded" radius="9" placeholder="" hint-size="100%,100%"></x-import>
+                    </div>
+                    <div style="flex:1;min-width:0">
+                      <div style="font-size:14px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#f4f1ea">{{ m.player }}</div>
+                      <div style="font-size:11px;font-weight:600;color:#8a8377;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ m.posShort }} · de {{ m.otherName }}</div>
+                    </div>
+                    <div style="text-align:right;flex-shrink:0">
+                      <div style="font-size:14px;font-weight:800;color:#f5b301;letter-spacing:-0.3px">{{ m.fee }}</div>
+                      <div style="display:flex;align-items:center;justify-content:flex-end;gap:4px;margin-top:1px"><span style="font-family:monospace;font-size:10px;color:{{ m.tierColor }}">{{ m.signalGlyph }}</span><span style="font-size:9.5px;font-weight:700;color:{{ m.tierColor }}">{{ m.signalLabel }}</span></div>
+                    </div>
+                  </button>
+                </sc-for>
+              </sc-if>
+              <sc-if value="{{ clubView.noArr }}" hint-placeholder-val="{{ false }}">
+                <div style="font-size:11.5px;font-weight:600;color:#6e675b;padding:4px 2px">Aucune arrivée sur cette fenêtre.</div>
+              </sc-if>
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:9px">
+              <div style="display:flex;align-items:center;gap:8px">
+                <span style="width:26px;height:26px;border-radius:8px;background:rgba(245,179,1,0.14);color:#f5cf5a;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800">↑</span>
+                <span style="font-size:13px;font-weight:800;letter-spacing:0.3px">Départs</span>
+                <span style="font-size:11px;font-weight:700;color:#8a8377">{{ clubView.depCount }}</span>
+              </div>
+              <sc-if value="{{ clubView.hasDep }}" hint-placeholder-val="{{ true }}">
+                <sc-for list="{{ clubView.departures }}" as="m" hint-placeholder-count="2">
+                  <button onClick="{{ m.onOpen }}" style="width:100%;text-align:left;position:relative;display:flex;align-items:center;gap:10px;background:#16120d;border:1px solid rgba(255,255,255,0.06);border-radius:13px;padding:11px 12px;cursor:pointer;font-family:Manrope;overflow:hidden" style-hover="border-color:rgba(245,179,1,0.4)">
+                    <div style="position:absolute;left:0;top:0;bottom:0;width:3px;background:#f5b301"></div>
+                    <div style="position:relative;width:34px;height:34px;border-radius:9px;overflow:hidden;flex-shrink:0;background:{{ m.otherColor }};display:flex;align-items:center;justify-content:center">
+                      <span style="position:absolute;font-size:10px;font-weight:800;color:#f4f1ea">{{ m.otherAbbr }}</span>
+                      <x-import component-from-global-scope="image-slot" from="./image-slot.js" id="{{ m.otherLogoId }}" shape="rounded" radius="9" placeholder="" hint-size="100%,100%"></x-import>
+                    </div>
+                    <div style="flex:1;min-width:0">
+                      <div style="font-size:14px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#f4f1ea">{{ m.player }}</div>
+                      <div style="font-size:11px;font-weight:600;color:#8a8377;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ m.posShort }} · vers {{ m.otherName }}</div>
+                    </div>
+                    <div style="text-align:right;flex-shrink:0">
+                      <div style="font-size:14px;font-weight:800;color:#f5b301;letter-spacing:-0.3px">{{ m.fee }}</div>
+                      <div style="display:flex;align-items:center;justify-content:flex-end;gap:4px;margin-top:1px"><span style="font-family:monospace;font-size:10px;color:{{ m.tierColor }}">{{ m.signalGlyph }}</span><span style="font-size:9.5px;font-weight:700;color:{{ m.tierColor }}">{{ m.signalLabel }}</span></div>
+                    </div>
+                  </button>
+                </sc-for>
+              </sc-if>
+              <sc-if value="{{ clubView.noDep }}" hint-placeholder-val="{{ false }}">
+                <div style="font-size:11.5px;font-weight:600;color:#6e675b;padding:4px 2px">Aucun départ sur cette fenêtre.</div>
+              </sc-if>
+            </div>
+          </div>
+        </div>
+        </sc-if>
+
+        <!-- ===== FICHE (1c) ===== -->
+        <sc-if value="{{ showDetailA }}" hint-placeholder-val="{{ false }}">
+        <div style="height:100%;display:flex;flex-direction:column;background:#0f0e0c;color:#f4f1ea;font-family:Manrope,system-ui,sans-serif">
+
+          <div style="flex-shrink:0;padding:52px 16px 16px;background:linear-gradient(180deg,#1c1710,#0f0e0c);border-bottom:1px solid rgba(255,255,255,0.06);display:flex;flex-direction:column;gap:13px">
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <button onClick="{{ backA }}" style="height:44px;padding:0 14px;border-radius:12px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);cursor:pointer;display:flex;align-items:center;gap:6px;color:#e8e2d8;font-family:Manrope;font-size:13px;font-weight:700" style-hover="background:rgba(255,255,255,0.08)"><span style="font-size:17px">‹</span>{{ backLabelA }}</button>
+              <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#8a8377">Fiche transfert</div>
+              <button style="width:44px;height:44px;border-radius:12px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);cursor:pointer;display:flex;align-items:center;justify-content:center;color:#e8e2d8;font-size:16px" style-hover="background:rgba(255,255,255,0.08)">⇪</button>
+            </div>
+            <sc-if value="{{ dA.breaking }}" hint-placeholder-val="{{ false }}">
+              <div style="display:inline-flex;align-self:flex-start;align-items:center;gap:5px;height:22px;padding:0 9px;border-radius:5px;background:linear-gradient(135deg,#f5b301,#e0870a);color:#1a1206;font-size:10px;font-weight:800;letter-spacing:0.7px">À LA UNE · MISE À JOUR {{ dA.updated }}</div>
+            </sc-if>
+            <div style="display:flex;align-items:center;gap:14px">
+              <div style="position:relative;width:64px;height:64px;border-radius:16px;overflow:hidden;flex-shrink:0;background:repeating-linear-gradient(135deg,#221c14,#221c14 6px,#1a150e 6px,#1a150e 12px);border:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center">
+                <span style="position:absolute;font-family:monospace;font-size:8px;color:#6e675b;text-align:center;line-height:1.2">PHOTO<br>JOUEUR</span>
+                <x-import component-from-global-scope="image-slot" from="./image-slot.js" id="{{ dA.photoId }}" shape="rounded" radius="16" placeholder="Photo" hint-size="100%,100%"></x-import>
+              </div>
+              <div style="min-width:0">
+                <div style="font-size:24px;font-weight:800;letter-spacing:-0.5px;line-height:1.05">{{ dA.player }}</div>
+                <div style="font-size:12.5px;font-weight:600;color:#a8a196;margin-top:3px">{{ dA.meta }}</div>
+                <div style="font-size:11.5px;font-weight:600;color:#8a8377;margin-top:2px">Valeur marchande <span style="color:#f5cf5a;font-weight:700">{{ dA.mv }}</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div style="flex:1;overflow-y:auto;min-height:0;padding:15px 16px 24px;display:flex;flex-direction:column;gap:15px">
+
+            <div style="background:#18140f;border:1px solid rgba(255,255,255,0.07);border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:14px">
+              <div style="display:flex;align-items:center;justify-content:space-between">
+                <div>
+                  <div style="font-size:11px;font-weight:700;letter-spacing:1px;color:#8a8377">INDICE DE FIABILITÉ</div>
+                  <div style="display:flex;align-items:baseline;gap:4px;margin-top:2px">
+                    <span style="font-size:44px;font-weight:800;letter-spacing:-1.5px;line-height:0.9;color:#f4f1ea">{{ dA.reliability }}</span>
+                    <span style="font-size:20px;font-weight:800;color:#a8a196">%</span>
+                  </div>
+                </div>
+                <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+                  <div style="display:flex;align-items:center;gap:7px;height:30px;padding:0 12px;border-radius:9px;border:1px solid {{ dA.badgeBorder }};background:{{ dA.badgeBg }}">
+                    <span style="font-family:monospace;font-size:13px;letter-spacing:1px;color:{{ dA.tierColor }}">{{ dA.signalGlyph }}</span>
+                    <span style="font-size:12px;font-weight:800;color:{{ dA.tierColor }}">Signal {{ dA.signalLabel }}</span>
+                  </div>
+                  <span style="font-size:11px;font-weight:600;color:#a8a196">{{ dA.stepLabel }}</span>
+                </div>
+              </div>
+              <div style="display:flex;gap:5px">
+                <sc-for list="{{ dA.segs }}" as="seg" hint-placeholder-count="6">
+                  <div style="flex:1;height:6px;border-radius:3px;background:{{ seg.bg }}"></div>
+                </sc-for>
+              </div>
+            </div>
+
+            <div>
+              <div style="font-size:12px;font-weight:700;letter-spacing:1px;color:#8a8377;margin-bottom:9px">FACE-À-FACE</div>
+              <div style="position:relative;display:flex;gap:9px">
+                <div style="flex:1;background:#16120d;border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:13px;display:flex;flex-direction:column;gap:9px">
+                  <div style="font-size:9px;font-weight:800;letter-spacing:1px;color:#8a8377">CLUB SORTANT</div>
+                  <div style="display:flex;align-items:center;gap:9px">
+                    <div style="position:relative;width:38px;height:38px;border-radius:10px;overflow:hidden;flex-shrink:0;background:{{ dA.from.color }};display:flex;align-items:center;justify-content:center">
+                      <span style="position:absolute;font-size:11px;font-weight:800;color:#f4f1ea">{{ dA.from.abbr }}</span>
+                      <x-import component-from-global-scope="image-slot" from="./image-slot.js" id="{{ dA.fromLogoId }}" shape="rounded" radius="10" placeholder="Logo" hint-size="100%,100%"></x-import>
+                    </div>
+                    <div style="min-width:0"><div style="font-size:14px;font-weight:800;line-height:1.1">{{ dA.from.name }}</div><div style="font-size:10px;font-weight:600;color:#8a8377">{{ dA.fromLeague }} · {{ dA.fromRank }}</div></div>
+                  </div>
+                  <div style="display:flex;flex-direction:column;gap:6px;margin-top:2px">
+                    <sc-for list="{{ dA.sortantLines }}" as="ln" hint-placeholder-count="3">
+                      <div style="display:flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:#c8c1b6"><span style="color:{{ ln.col }}">{{ ln.ic }}</span>{{ ln.text }}</div>
+                    </sc-for>
+                  </div>
+                </div>
+
+                <div style="align-self:center;flex-shrink:0;width:36px;height:36px;border-radius:50%;background:#0f0e0c;border:1.5px solid rgba(245,179,1,0.5);box-shadow:0 0 16px rgba(245,179,1,0.3);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#f5b301;z-index:2;margin:0 -14px">VS</div>
+
+                <div style="flex:1;background:#16120d;border:1px solid rgba(245,179,1,0.25);border-radius:14px;padding:13px;display:flex;flex-direction:column;gap:9px">
+                  <div style="font-size:9px;font-weight:800;letter-spacing:1px;color:#f5cf5a">CLUB ENTRANT</div>
+                  <div style="display:flex;align-items:center;gap:9px">
+                    <div style="position:relative;width:38px;height:38px;border-radius:10px;overflow:hidden;flex-shrink:0;background:{{ dA.to.color }};display:flex;align-items:center;justify-content:center">
+                      <span style="position:absolute;font-size:11px;font-weight:800;color:#f4f1ea">{{ dA.to.abbr }}</span>
+                      <x-import component-from-global-scope="image-slot" from="./image-slot.js" id="{{ dA.toLogoId }}" shape="rounded" radius="10" placeholder="Logo" hint-size="100%,100%"></x-import>
+                    </div>
+                    <div style="min-width:0"><div style="font-size:14px;font-weight:800;line-height:1.1">{{ dA.to.name }}</div><div style="font-size:10px;font-weight:600;color:#8a8377">{{ dA.leagueName }} · {{ dA.toRank }}</div></div>
+                  </div>
+                  <div style="display:flex;flex-direction:column;gap:6px;margin-top:2px">
+                    <sc-for list="{{ dA.entrantLines }}" as="ln" hint-placeholder-count="3">
+                      <div style="display:flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:#c8c1b6"><span style="color:{{ ln.col }}">{{ ln.ic }}</span>{{ ln.text }}</div>
+                    </sc-for>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px">
+              <div style="background:#16120d;border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:12px">
+                <div style="font-size:9.5px;font-weight:700;letter-spacing:0.8px;color:#8a8377">MONTANT</div>
+                <div style="font-size:19px;font-weight:800;color:#f5b301;letter-spacing:-0.5px;margin-top:2px">{{ dA.fee }}</div>
+              </div>
+              <div style="background:#16120d;border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:12px">
+                <div style="font-size:9.5px;font-weight:700;letter-spacing:0.8px;color:#8a8377">TYPE D'OPÉRATION</div>
+                <div style="font-size:15px;font-weight:800;margin-top:4px">{{ dA.type }}</div>
+              </div>
+              <div style="background:#16120d;border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:12px">
+                <div style="font-size:9.5px;font-weight:700;letter-spacing:0.8px;color:#8a8377">CONTRAT PROPOSÉ</div>
+                <div style="font-size:15px;font-weight:800;margin-top:4px">{{ dA.contractLen }}</div>
+              </div>
+              <div style="background:#16120d;border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:12px">
+                <div style="font-size:9.5px;font-weight:700;letter-spacing:0.8px;color:#8a8377">SALAIRE ANNUEL</div>
+                <div style="font-size:15px;font-weight:800;margin-top:4px">{{ dA.wage }}</div>
+              </div>
+            </div>
+
+            <div>
+              <div style="font-size:12px;font-weight:700;letter-spacing:1px;color:#8a8377;margin-bottom:11px">PROGRESSION · {{ dA.step }}/6</div>
+              <div style="display:flex;flex-direction:column">
+                <sc-for list="{{ dA.detailSteps }}" as="s" hint-placeholder-count="6">
+                  <div style="display:flex;gap:12px">
+                    <div style="display:flex;flex-direction:column;align-items:center;width:24px;flex-shrink:0">
+                      <div style="width:24px;height:24px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;background:{{ s.nodeBg }};border:{{ s.nodeBorder }};color:{{ s.glyphColor }};box-shadow:{{ s.nodeShadow }}">{{ s.glyph }}</div>
+                      <sc-if value="{{ s.hasLine }}" hint-placeholder-val="{{ true }}">
+                        <div style="width:2px;flex:1;min-height:22px;background:{{ s.lineBg }}"></div>
+                      </sc-if>
+                    </div>
+                    <div style="padding-bottom:16px;flex:1">
+                      <div style="font-size:13.5px;font-weight:700;color:{{ s.labelColor }};line-height:1.2">{{ s.label }}</div>
+                      <div style="font-size:11px;font-weight:600;color:#8a8377;margin-top:2px">{{ s.stateText }}</div>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+
+            <div style="background:#16120d;border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:13px">
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+                <div style="font-size:12px;font-weight:700;letter-spacing:1px;color:#8a8377">FIABILITÉ DES SOURCES</div>
+                <div style="display:flex;align-items:center;gap:7px">
+                  <div style="display:flex;gap:3px">
+                    <sc-for list="{{ dA.srcSegs }}" as="seg" hint-placeholder-count="5">
+                      <div style="width:6px;height:14px;border-radius:2px;background:{{ seg.bg }}"></div>
+                    </sc-for>
+                  </div>
+                  <span style="font-size:11px;font-weight:800;color:#4cc38a">{{ dA.corrobCount }}/5</span>
+                </div>
+              </div>
+              <div style="font-size:12.5px;font-weight:700;color:#e8e2d8">{{ dA.corrobLabel }}</div>
+
+              <button onClick="{{ dA.primary.onOpen }}" style="width:100%;text-align:left;display:flex;align-items:center;gap:10px;background:#1c1710;border:1px solid rgba(245,179,1,0.3);border-radius:12px;padding:11px 12px;cursor:pointer;font-family:Manrope" style-hover="border-color:rgba(245,179,1,0.55)">
+                <span style="width:34px;height:34px;border-radius:9px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;background:rgba(245,179,1,0.12);color:{{ dA.primary.typeColor }};border:1px solid rgba(245,179,1,0.3)">{{ dA.primary.typeGlyph }}</span>
+                <div style="flex:1;min-width:0">
+                  <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+                    <span style="font-size:13.5px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#f4f1ea">{{ dA.primary.name }}</span>
+                    <span style="font-size:9px;font-weight:800;letter-spacing:0.5px;color:#1a1206;background:#f5b301;border-radius:4px;padding:2px 6px;flex-shrink:0">PRIMAIRE</span>
+                  </div>
+                  <div style="font-size:10.5px;font-weight:600;color:#8a8377;margin-top:2px">{{ dA.primary.typeLabel }} · {{ dA.primary.reliability }}% fiable</div>
+                </div>
+                <span style="font-size:15px;font-weight:700;color:#f5b301;flex-shrink:0">›</span>
+              </button>
+
+              <sc-if value="{{ dA.hasRelays }}" hint-placeholder-val="{{ true }}">
+                <div style="display:flex;flex-direction:column;gap:6px">
+                  <div style="font-size:10px;font-weight:700;letter-spacing:0.6px;color:#8a8377">REPRISES PAR</div>
+                  <sc-for list="{{ dA.relays }}" as="r" hint-placeholder-count="2">
+                    <button onClick="{{ r.onOpen }}" style="width:100%;text-align:left;display:flex;align-items:center;gap:9px;background:#151107;border:1px solid rgba(255,255,255,0.06);border-radius:11px;padding:9px 11px;cursor:pointer;font-family:Manrope" style-hover="border-color:rgba(255,255,255,0.18)">
+                      <span style="width:26px;height:26px;border-radius:7px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;background:rgba(255,255,255,0.05);color:{{ r.typeColor }}">{{ r.typeGlyph }}</span>
+                      <span style="flex:1;min-width:0;font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#f4f1ea">{{ r.name }}</span>
+                      <span style="font-size:10.5px;font-weight:600;color:#8a8377;flex-shrink:0">{{ r.typeLabel }}</span>
+                      <span style="font-size:14px;font-weight:700;color:#f5b301;flex-shrink:0">›</span>
+                    </button>
+                  </sc-for>
+                </div>
+              </sc-if>
+            </div>
+
+            <div style="background:#16120d;border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:12px">
+              <div style="font-size:12px;font-weight:700;letter-spacing:1px;color:#8a8377">CHRONOLOGIE</div>
+              <sc-for list="{{ dA.timeline }}" as="u" hint-placeholder-count="3">
+                <div style="display:flex;gap:10px">
+                  <div style="width:8px;height:8px;border-radius:50%;background:{{ u.dotColor }};flex-shrink:0;margin-top:5px"></div>
+                  <div style="flex:1;min-width:0">
+                    <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+                      <span style="font-size:12.5px;font-weight:700;color:#e8e2d8">{{ u.name }}</span>
+                      <span style="font-size:10px;font-weight:700;color:{{ u.typeColor }}">{{ u.typeGlyph }} {{ u.typeLabel }}</span>
+                      <sc-if value="{{ u.primary }}" hint-placeholder-val="{{ false }}">
+                        <span style="font-size:8.5px;font-weight:800;letter-spacing:0.4px;color:#1a1206;background:#f5b301;border-radius:4px;padding:1px 5px">SOURCE PRIMAIRE</span>
+                      </sc-if>
+                    </div>
+                    <div style="font-size:10.5px;font-weight:600;color:#8a8377;margin-top:1px">{{ u.time }}</div>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+
+            <button style="height:52px;flex-shrink:0;border-radius:14px;border:none;cursor:pointer;background:linear-gradient(135deg,#f5b301,#e0870a);color:#1a1206;font-family:Manrope;font-size:15px;font-weight:800;letter-spacing:0.2px;box-shadow:0 0 0 1px rgba(245,179,1,0.4),0 6px 24px rgba(245,179,1,0.35);display:flex;align-items:center;justify-content:center;gap:8px" style-hover="box-shadow:0 0 0 1px rgba(245,179,1,0.6),0 8px 30px rgba(245,179,1,0.5)">
+              Suivre ce transfert
+            </button>
+          </div>
+        </div>
+        </sc-if>
+
+        <!-- ===== PROFIL DE SOURCE ===== -->
+        <sc-if value="{{ showSourceA }}" hint-placeholder-val="{{ false }}">
+        <div style="height:100%;display:flex;flex-direction:column;background:#0f0e0c;color:#f4f1ea;font-family:Manrope,system-ui,sans-serif">
+          <div style="flex-shrink:0;padding:52px 16px 16px;background:linear-gradient(180deg,#1c1710,#0f0e0c);border-bottom:1px solid rgba(255,255,255,0.06);display:flex;flex-direction:column;gap:13px">
+            <div style="display:flex;align-items:center;gap:11px">
+              <button onClick="{{ backToDetail }}" style="width:44px;height:44px;border-radius:12px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);cursor:pointer;display:flex;align-items:center;justify-content:center;color:#e8e2d8;font-size:18px;flex-shrink:0" style-hover="background:rgba(255,255,255,0.08)">‹</button>
+              <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#8a8377">Profil de source</div>
+            </div>
+          </div>
+          <div style="flex:1;overflow-y:auto;min-height:0;padding:20px 16px 24px;display:flex;flex-direction:column;gap:16px">
+            <div style="display:flex;align-items:center;gap:13px">
+              <span style="width:52px;height:52px;border-radius:14px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;background:rgba(245,179,1,0.1);border:1px solid rgba(245,179,1,0.3);color:{{ srcView.typeColor }}">{{ srcView.typeGlyph }}</span>
+              <div style="min-width:0">
+                <div style="font-size:20px;font-weight:800;letter-spacing:-0.3px;line-height:1.1">{{ srcView.name }}</div>
+                <div style="font-size:12px;font-weight:600;color:#8a8377;margin-top:2px">{{ srcView.typeLabel }}</div>
+              </div>
+            </div>
+            <div style="background:#18140f;border:1px solid rgba(255,255,255,0.07);border-radius:18px;padding:18px;display:flex;flex-direction:column;gap:9px">
+              <div style="font-size:11px;font-weight:700;letter-spacing:1px;color:#8a8377">FIABILITÉ HISTORIQUE</div>
+              <div style="display:flex;align-items:baseline;gap:5px">
+                <span style="font-size:46px;font-weight:800;letter-spacing:-1.5px;line-height:0.9">{{ srcView.reliability }}</span>
+                <span style="font-size:20px;font-weight:800;color:#a8a196">%</span>
+              </div>
+              <div style="font-size:12.5px;font-weight:600;color:#a8a196">{{ srcView.trackedLabel }}</div>
+            </div>
+            <div style="background:#16120d;border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:9px">
+              <div style="font-size:12px;font-weight:700;letter-spacing:1px;color:#8a8377">CATÉGORIE</div>
+              <div style="display:flex;align-items:center;gap:8px">
+                <span style="font-size:14px;color:{{ srcView.typeColor }}">{{ srcView.typeGlyph }}</span>
+                <span style="font-size:13px;font-weight:700">{{ srcView.typeLabel }}</span>
+              </div>
+              <div style="font-size:11.5px;font-weight:500;color:#8a8377;line-height:1.5;margin-top:2px">{{ srcView.typeDesc }}</div>
+            </div>
+          </div>
+        </div>
+        </sc-if>
+
+      </x-import>
+    </div>
+
+    <!-- ===================== 1b — FLUX TERMINAL COMPACT ===================== -->
+    <div id="1b" style="display:flex;flex-direction:column;gap:14px;align-items:flex-start">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="border:1px solid rgba(245,179,1,0.6);color:#f5b301;padding:3px 9px;border-radius:6px;font-size:12px;font-weight:800;letter-spacing:0.5px">1b</span>
+        <span style="font-size:13px;font-weight:600;color:#a8a196;letter-spacing:0.3px">Flux — terminal compact (Été 2026)</span>
+      </div>
+
+      <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="{{ true }}" hint-size="402px,874px">
+        <div style="height:100%;display:flex;flex-direction:column;background:#0d0c0a;color:#f4f1ea;font-family:Manrope,system-ui,sans-serif">
+
+          <div style="padding:54px 14px 10px;display:flex;flex-direction:column;gap:10px;background:linear-gradient(180deg,#161309,#0d0c0a);border-bottom:1px solid rgba(255,255,255,0.06);flex-shrink:0">
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <div style="display:flex;align-items:center;gap:8px">
+                <div style="font-size:20px;font-weight:800;letter-spacing:-0.4px">Flux</div>
+                <span style="font-size:11px;font-weight:700;color:#8a8377;font-family:monospace">{{ countB }} ACTIFS</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:6px;height:30px;padding:0 11px;border-radius:8px;border:1px solid rgba(245,179,1,0.35);background:rgba(245,179,1,0.08);color:#f5cf5a;font-size:11px;font-weight:700">
+                <span style="width:6px;height:6px;border-radius:50%;background:#f5b301;box-shadow:0 0 8px #f5b301"></span>ÉTÉ 2026
+              </div>
+            </div>
+            <div style="display:flex;gap:7px;overflow-x:auto;margin:0 -14px;padding:2px 14px 4px">
+              <sc-for list="{{ leaguesB }}" as="lg" hint-placeholder-count="6">
+                <button onClick="{{ lg.onClick }}" style="position:relative;height:44px;padding:0 13px;border-radius:10px;border:1px solid rgba(255,255,255,0.09);background:#161207;color:#e8e2d8;font-family:Manrope;font-size:12px;font-weight:600;white-space:nowrap;cursor:pointer;display:flex;align-items:center;gap:7px;flex-shrink:0" style-hover="border-color:rgba(245,179,1,0.4)">
+                  <sc-if value="{{ lg.active }}" hint-placeholder-val="{{ false }}">
+                    <div style="position:absolute;inset:-1px;border-radius:10px;border:1.5px solid #f5b301;box-shadow:0 0 16px rgba(245,179,1,0.5),inset 0 0 12px rgba(245,179,1,0.12);pointer-events:none"></div>
+                  </sc-if>
+                  <span style="position:relative;width:7px;height:7px;border-radius:2px;background:{{ lg.color }}"></span>
+                  <span style="position:relative">{{ lg.short }}</span>
+                </button>
+              </sc-for>
+            </div>
+          </div>
+
+          <div style="flex:1;overflow-y:auto;min-height:0;padding:11px 14px 16px;display:flex;flex-direction:column;gap:9px">
+            <sc-for list="{{ transfersB }}" as="t" hint-placeholder-count="6">
+              <div style="position:relative;display:flex;background:#151107;border:1px solid rgba(255,255,255,0.06);border-radius:12px;overflow:hidden">
+                <div style="width:4px;flex-shrink:0;background:{{ t.tierColor }}"></div>
+                <div style="flex:1;min-width:0;padding:11px 12px;display:flex;flex-direction:column;gap:9px">
+
+                  <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+                    <div style="display:flex;align-items:center;gap:6px;min-width:0">
+                      <span style="width:7px;height:7px;border-radius:50%;flex-shrink:0;background:{{ t.leagueColor }}"></span>
+                      <span style="font-size:10px;font-weight:700;letter-spacing:0.6px;color:#a8a196">{{ t.leagueName }}</span>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:6px">
+                      <span style="font-family:monospace;font-size:12px;letter-spacing:1px;color:{{ t.tierColor }}">{{ t.signalGlyph }}</span>
+                      <span style="font-size:10px;font-weight:700;color:{{ t.tierColor }}">{{ t.signalLabel }}</span>
+                    </div>
+                  </div>
+
+                  <div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px">
+                    <div style="font-size:16px;font-weight:800;letter-spacing:-0.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ t.player }}</div>
+                    <div style="font-size:11px;font-weight:600;color:#8a8377;white-space:nowrap">{{ t.posAge }}</div>
+                  </div>
+
+                  <div style="display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700">
+                    <span style="display:flex;align-items:center;gap:6px;min-width:0"><span style="position:relative;width:22px;height:22px;border-radius:6px;overflow:hidden;flex-shrink:0;background:{{ t.from.color }};display:flex;align-items:center;justify-content:center"><span style="position:absolute;font-size:9px;font-weight:800;color:#f4f1ea">{{ t.from.abbr }}</span><x-import component-from-global-scope="image-slot" from="./image-slot.js" id="{{ t.fromLogoId }}" shape="rounded" radius="6" placeholder="" hint-size="100%,100%"></x-import></span><span style="color:#c8c1b6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ t.from.name }}</span></span>
+                    <span style="color:#f5b301;font-size:15px;flex-shrink:0">→</span>
+                    <span style="display:flex;align-items:center;gap:6px;min-width:0;justify-content:flex-end;flex:1"><span style="color:#f4f1ea;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ t.to.name }}</span><span style="position:relative;width:22px;height:22px;border-radius:6px;overflow:hidden;flex-shrink:0;background:{{ t.to.color }};display:flex;align-items:center;justify-content:center"><span style="position:absolute;font-size:9px;font-weight:800;color:#f4f1ea">{{ t.to.abbr }}</span><x-import component-from-global-scope="image-slot" from="./image-slot.js" id="{{ t.toLogoId }}" shape="rounded" radius="6" placeholder="" hint-size="100%,100%"></x-import></span></span>
+                  </div>
+
+                  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:rgba(255,255,255,0.06);border-radius:8px;overflow:hidden">
+                    <div style="background:#191307;padding:7px 8px">
+                      <div style="font-size:8.5px;font-weight:700;letter-spacing:0.5px;color:#8a8377">MONTANT</div>
+                      <div style="font-size:13px;font-weight:800;color:#f5b301;letter-spacing:-0.3px">{{ t.fee }}</div>
+                    </div>
+                    <div style="background:#191307;padding:7px 8px">
+                      <div style="font-size:8.5px;font-weight:700;letter-spacing:0.5px;color:#8a8377">FIABILITÉ</div>
+                      <div style="font-size:13px;font-weight:800;letter-spacing:-0.3px">{{ t.reliability }}%</div>
+                    </div>
+                    <div style="background:#191307;padding:7px 8px">
+                      <div style="font-size:8.5px;font-weight:700;letter-spacing:0.5px;color:#8a8377">TYPE</div>
+                      <div style="font-size:12px;font-weight:700;letter-spacing:-0.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ t.typeShort }}</div>
+                    </div>
+                    <div style="background:#191307;padding:7px 8px">
+                      <div style="font-size:8.5px;font-weight:700;letter-spacing:0.5px;color:#8a8377">CONTRAT</div>
+                      <div style="font-size:12px;font-weight:700;letter-spacing:-0.2px">{{ t.contract }}</div>
+                    </div>
+                  </div>
+
+                  <div style="display:flex;align-items:center;gap:8px">
+                    <div style="display:flex;gap:3px;flex:1">
+                      <sc-for list="{{ t.segs }}" as="seg" hint-placeholder-count="6">
+                        <div style="flex:1;height:4px;border-radius:2px;background:{{ seg.bg }}"></div>
+                      </sc-for>
+                    </div>
+                    <span style="font-size:10px;font-weight:700;color:#c8c1b6;white-space:nowrap">{{ t.stepLabel }} · {{ t.step }}/6</span>
+                  </div>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+
+          <div style="flex-shrink:0;display:flex;justify-content:space-around;align-items:flex-start;padding:8px 8px 30px;background:linear-gradient(0deg,#161309,#0d0c0a);border-top:1px solid rgba(255,255,255,0.07)">
+            <sc-for list="{{ tabsB }}" as="tb" hint-placeholder-count="4">
+              <button onClick="{{ tb.onClick }}" style="position:relative;flex:1;min-width:44px;height:46px;background:transparent;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-family:Manrope">
+                <sc-if value="{{ tb.active }}" hint-placeholder-val="{{ false }}">
+                  <div style="position:absolute;top:-1px;width:32px;height:32px;border-radius:11px;background:radial-gradient(circle,rgba(245,179,1,0.28),rgba(245,179,1,0) 70%)"></div>
+                </sc-if>
+                <span style="position:relative;font-family:'Material Symbols Outlined';font-size:23px;line-height:1;color:{{ tb.color }};font-variation-settings:{{ tb.fill }};text-shadow:{{ tb.glow }}">{{ tb.icon }}</span>
+                <span style="position:relative;font-size:10px;font-weight:700;color:{{ tb.color }}">{{ tb.label }}</span>
+              </button>
+            </sc-for>
+          </div>
+        </div>
+      </x-import>
+    </div>
+
+  </div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1000,&quot;height&quot;:980}}">
+class Component extends DCLogic {
+  state = { window:'e26', leagueA:'all', leagueB:'all', tabA:'flux', tabB:'flux', screenA:'tabs', selA:1, selLeague:'pl', selClub:null, backTo:'tabs', selSourceName:null, selSourceIsOfficial:false };
+
+  STEPS = ['Rumeur','Contact confirmé','Négociation','Accord clubs','Accord joueur','Officiel'];
+
+  WINDOWS = [
+    { id:'e26', label:'Été 26', sub:'en cours', full:'Été 2026', live:true },
+    { id:'h26', label:'Hiver 26', sub:'clôturé', full:'Hiver 2026', live:false },
+    { id:'e25', label:'Été 25', sub:'clôturé', full:'Été 2025', live:false },
+  ];
+
+  LEAGUES = [
+    { id:'all', name:'Tous', short:'TOUS', color:'#f5b301' },
+    { id:'pl', name:'Premier League', short:'PL', color:'#9b8cf0' },
+    { id:'l1', name:'Ligue 1', short:'L1', color:'#6fa8e0' },
+    { id:'bl', name:'Bundesliga', short:'BL', color:'#e0776f' },
+    { id:'sa', name:'Serie A', short:'SA', color:'#6fc59a' },
+    { id:'ll', name:'La Liga', short:'LL', color:'#e0a86f' },
+  ];
+
+  // clubs des Big 5 (pour la vue championnat → club)
+  CLUBS = {
+    MCR:{n:'Manchester',lg:'pl',c:'#b0392b'}, NEW:{n:'Newcastle',lg:'pl',c:'#3a4550'}, LDN:{n:'London City',lg:'pl',c:'#6a8ac0'}, SEA:{n:'Seaside',lg:'pl',c:'#2f8a9a'},
+    PSG:{n:'Paris SG',lg:'l1',c:'#2a3a6a'}, OM:{n:'Marseille',lg:'l1',c:'#2f7fb0'}, OL:{n:'Lyon',lg:'l1',c:'#4a6a8a'}, MON:{n:'Monaco',lg:'l1',c:'#b03535'}, REN:{n:'Rennes',lg:'l1',c:'#8a3a3a'},
+    DOR:{n:'Dortmund',lg:'bl',c:'#c9a227'}, MUN:{n:'München',lg:'bl',c:'#a03030'}, LEI:{n:'Leipzig',lg:'bl',c:'#c04a4a'},
+    MIL:{n:'Milan',lg:'sa',c:'#a0402f'}, ROM:{n:'Roma',lg:'sa',c:'#8a4a4a'}, JUV:{n:'Juventus',lg:'sa',c:'#4d4d4d'}, NAP:{n:'Napoli',lg:'sa',c:'#2f7fb0'},
+    ATM:{n:'Atlético',lg:'ll',c:'#8a3535'}, BET:{n:'Betis',lg:'ll',c:'#3a6a4a'}, SEV:{n:'Sevilla',lg:'ll',c:'#b03030'},
+  };
+
+  // ===== Fiabilité des sources =====
+  TYPE_META = {
+    officiel:    { label:'Club officiel',            glyph:'◆', color:'#4cc38a' },
+    journaliste: { label:'Journaliste spécialisé',   glyph:'✎', color:'#f5b301' },
+    media:       { label:'Média généraliste',        glyph:'▤', color:'#6fa8e0' },
+    non_verifie: { label:'Non vérifié',              glyph:'?', color:'#98a2b3' },
+  };
+
+  SOURCE_CATALOG = {
+    'Fabrizio Romano':        { type:'journaliste', rel:91, tracked:340 },
+    'The Athletic':           { type:'journaliste', rel:86, tracked:175 },
+    'Sky Sports':              { type:'media', rel:84, tracked:210 },
+    "L'Équipe":                { type:'media', rel:88, tracked:265 },
+    'RMC Sport':                { type:'media', rel:79, tracked:190 },
+    'Marca':                    { type:'media', rel:75, tracked:220 },
+    'AS':                       { type:'media', rel:77, tracked:150 },
+    'Gazzetta dello Sport':     { type:'media', rel:80, tracked:198 },
+    'Sky Sport Italia':         { type:'media', rel:81, tracked:160 },
+    'Kicker':                   { type:'media', rel:85, tracked:230 },
+    'Sky Sport DE':             { type:'media', rel:82, tracked:175 },
+    'Compte Transfert_Leaks':   { type:'non_verifie', rel:38, tracked:45 },
+  };
+
+  LEAGUE_MEDIA = {
+    pl: ['Sky Sports','The Athletic'],
+    l1: ["L'Équipe",'RMC Sport'],
+    bl: ['Kicker','Sky Sport DE'],
+    sa: ['Gazzetta dello Sport','Sky Sport Italia'],
+    ll: ['Marca','AS'],
+  };
+
+  enrichSource(s) {
+    const meta = s.official ? { type:'officiel', rel:100, tracked:null } : (this.SOURCE_CATALOG[s.name] || { type:'media', rel:70, tracked:80 });
+    const tm = this.TYPE_META[meta.type];
+    return { ...s, type: meta.type, reliability: meta.rel, tracked: meta.tracked,
+      typeLabel: tm.label, typeGlyph: tm.glyph, typeColor: tm.color, dotColor: tm.color,
+      onOpen: () => this.setState({ screenA:'source', selSourceName: s.name, selSourceIsOfficial: !!s.official }) };
+  }
+
+  sourcesFor(t) {
+    const media = this.LEAGUE_MEDIA[t.league] || ['Sky Sports','The Athletic'];
+    const lowSignal = t.step <= 2;
+    const usesLeak = lowSignal && (t.id % 3 === 0);
+    const primaryName = usesLeak ? 'Compte Transfert_Leaks' : 'Fabrizio Romano';
+    const count = t.step <= 1 ? 1 : t.step <= 2 ? 2 : t.step <= 4 ? 3 : 3;
+    const times = ['il y a 6j','il y a 4j','il y a 2j','il y a 1j'];
+    const list = [{ name: primaryName, primary: true, time: times[0] }];
+    const relayCandidates = ['Fabrizio Romano', ...media].filter(n => n !== primaryName);
+    let ri = 0;
+    while (list.length < count && ri < relayCandidates.length) {
+      list.push({ name: relayCandidates[ri], primary: false, time: times[list.length] || 'il y a 1j' });
+      ri++;
+    }
+    if (t.step >= 6) {
+      list.push({ name: t.to.name + ' (officiel)', primary: false, time: t.updated, official: true });
+    }
+    return list.map(s => this.enrichSource(s));
+  }
+
+  sourceProfileView() {
+    const name = this.state.selSourceName || 'Fabrizio Romano';
+    const isOfficial = this.state.selSourceIsOfficial;
+    const meta = isOfficial ? { type:'officiel', rel:100, tracked:null } : (this.SOURCE_CATALOG[name] || { type:'media', rel:70, tracked:80 });
+    const tm = this.TYPE_META[meta.type];
+    const descs = {
+      officiel: "Annonce publiée directement par le club — fiabilité maximale par définition.",
+      journaliste: "Journaliste spécialisé transferts, réseau de contacts direct chez les clubs et agents.",
+      media: "Média généraliste sportif, relaie ou confirme des informations déjà en circulation.",
+      non_verifie: "Compte non vérifié — à traiter avec prudence tant qu'aucune source qualifiée ne confirme.",
+    };
+    return { name, reliability: meta.rel,
+      trackedLabel: meta.tracked ? ('Sur ' + meta.tracked + ' rumeurs suivies') : 'Communication officielle du club',
+      typeLabel: tm.label, typeGlyph: tm.glyph, typeColor: tm.color, typeDesc: descs[meta.type] };
+  }
+
+  RAW = [
+    // ===== ÉTÉ 2026 (en cours) =====
+    { id:1, window:'e26', player:'Marcus Vessel', posAge:'RW · 22', posShort:'Ailier droit', meta:'Ailier droit · 22 ans · BRA', league:'pl',
+      from:{name:'Estádio FC',abbr:'EST',color:'#4a5568'}, to:{name:'Manchester',abbr:'MCR',color:'#b0392b'},
+      fee:'€82M', step:5, reliability:88, updated:'il y a 2h', breaking:true, type:'Transfert sec', typeShort:'Sec', contract:'5 ans',
+      mv:'€70M', wage:'€9M/an', contractLen:'5 ans · 2031', contractUntil:'2027', fromLeague:'Liga Nos', fromRank:'4ᵉ', toRank:'2ᵉ', posGroup:'offensive' },
+    { id:2, window:'e26', player:'Théo Lambert', posAge:'CB · 24', posShort:'Défenseur central', meta:'Défenseur central · 24 ans · FRA', league:'pl',
+      from:{name:'Lyon',abbr:'OL',color:'#4a6a8a'}, to:{name:'Newcastle',abbr:'NEW',color:'#3a4550'},
+      fee:'€45M', step:4, reliability:74, updated:'il y a 5h', breaking:false, type:'Transfert sec', typeShort:'Sec', contract:'4 ans',
+      mv:'€38M', wage:'€6M/an', contractLen:'4 ans · 2030', contractUntil:'2026', fromLeague:'Ligue 1', fromRank:'3ᵉ', toRank:'5ᵉ', posGroup:'défensive' },
+    { id:3, window:'e26', player:'Andrea Costa', posAge:'AM · 27', posShort:'Milieu offensif', meta:'Milieu offensif · 27 ans · ITA', league:'sa',
+      from:{name:'Roma',abbr:'ROM',color:'#8a4a4a'}, to:{name:'Milan',abbr:'MIL',color:'#a0402f'},
+      fee:'€30M', step:3, reliability:61, updated:'il y a 8h', breaking:false, type:'Transfert sec', typeShort:'Sec', contract:'3 ans',
+      mv:'€26M', wage:'€5M/an', contractLen:'3 ans · 2029', contractUntil:'2025', fromLeague:'Serie A', fromRank:'5ᵉ', toRank:'3ᵉ', posGroup:'créative' },
+    { id:4, window:'e26', player:'Lukas Berg', posAge:'ST · 19', posShort:'Avant-centre', meta:'Avant-centre · 19 ans · GER', league:'bl',
+      from:{name:'RB Salzburg',abbr:'SAL',color:'#4a5a3a'}, to:{name:'Dortmund',abbr:'DOR',color:'#c9a227'},
+      fee:'€55M', step:6, reliability:100, updated:'il y a 1j', breaking:false, type:'Transfert sec', typeShort:'Sec', contract:'5 ans',
+      mv:'€48M', wage:'€7M/an', contractLen:'5 ans · 2031', contractUntil:'2028', fromLeague:'Bundesliga AT', fromRank:'2ᵉ', toRank:'1ᵉʳ', posGroup:'offensive' },
+    { id:5, window:'e26', player:'Pablo Nieto', posAge:'LB · 26', posShort:'Latéral gauche', meta:'Latéral gauche · 26 ans · ESP', league:'ll',
+      from:{name:'Betis',abbr:'BET',color:'#3a6a4a'}, to:{name:'Atlético',abbr:'ATM',color:'#8a3535'},
+      fee:'€22M', step:2, reliability:48, updated:'il y a 1j', breaking:false, type:'Transfert sec', typeShort:'Sec', contract:'4 ans',
+      mv:'€18M', wage:'€4M/an', contractLen:'4 ans · 2030', contractUntil:'2026', fromLeague:'La Liga', fromRank:'6ᵉ', toRank:'3ᵉ', posGroup:'défensive' },
+    { id:6, window:'e26', player:'Kylian Roux', posAge:'DM · 23', posShort:'Milieu défensif', meta:'Milieu défensif · 23 ans · FRA', league:'l1',
+      from:{name:'Rennes',abbr:'REN',color:'#8a3a3a'}, to:{name:'Paris SG',abbr:'PSG',color:'#2a3a6a'},
+      fee:'€38M', step:1, reliability:32, updated:'il y a 2j', breaking:false, type:'Rumeur', typeShort:'Bruit', contract:'—',
+      mv:'€30M', wage:'€8M/an', contractLen:'À définir', contractUntil:'2027', fromLeague:'Ligue 1', fromRank:'8ᵉ', toRank:'1ᵉʳ', posGroup:'défensive' },
+    { id:7, window:'e26', player:'Diego Fuentes', posAge:'CF · 25', posShort:'Attaquant', meta:'Attaquant · 25 ans · ARG', league:'pl',
+      from:{name:'Marseille',abbr:'OM',color:'#2f7fb0'}, to:{name:'Manchester',abbr:'MCR',color:'#b0392b'},
+      fee:'€60M', step:3, reliability:58, updated:'il y a 12h', breaking:false, type:'Transfert sec', typeShort:'Sec', contract:'4 ans',
+      mv:'€52M', wage:'€8M/an', contractLen:'4 ans · 2030', contractUntil:'2027', fromLeague:'Ligue 1', fromRank:'2ᵉ', toRank:'2ᵉ', posGroup:'offensive' },
+    { id:8, window:'e26', player:'Sofiane Bakir', posAge:'RW · 21', posShort:'Ailier', meta:'Ailier · 21 ans · MAR', league:'l1',
+      from:{name:'Monaco',abbr:'MON',color:'#b03535'}, to:{name:'Paris SG',abbr:'PSG',color:'#2a3a6a'},
+      fee:'€48M', step:5, reliability:85, updated:'il y a 3h', breaking:false, type:'Transfert sec', typeShort:'Sec', contract:'5 ans',
+      mv:'€44M', wage:'€7M/an', contractLen:'5 ans · 2031', contractUntil:'2027', fromLeague:'Ligue 1', fromRank:'5ᵉ', toRank:'1ᵉʳ', posGroup:'offensive' },
+    { id:9, window:'e26', player:'Owen Blake', posAge:'CM · 28', posShort:'Milieu central', meta:'Milieu central · 28 ans · ENG', league:'pl',
+      from:{name:'Manchester',abbr:'MCR',color:'#b0392b'}, to:{name:'Newcastle',abbr:'NEW',color:'#3a4550'},
+      fee:'€28M', step:4, reliability:70, updated:'il y a 1j', breaking:false, type:'Transfert sec', typeShort:'Sec', contract:'3 ans',
+      mv:'€24M', wage:'€5M/an', contractLen:'3 ans · 2029', contractUntil:'2026', fromLeague:'Premier League', fromRank:'2ᵉ', toRank:'5ᵉ', posGroup:'créative' },
+    { id:10, window:'e26', player:'Tomás Reis', posAge:'CB · 23', posShort:'Défenseur central', meta:'Défenseur central · 23 ans · POR', league:'l1',
+      from:{name:'Porto',abbr:'POR',color:'#3a5a8a'}, to:{name:'Lyon',abbr:'OL',color:'#4a6a8a'},
+      fee:'€25M', step:3, reliability:60, updated:'il y a 1j', breaking:false, type:'Transfert sec', typeShort:'Sec', contract:'4 ans',
+      mv:'€22M', wage:'€4M/an', contractLen:'4 ans · 2030', contractUntil:'2026', fromLeague:'Liga Nos', fromRank:'3ᵉ', toRank:'3ᵉ', posGroup:'défensive' },
+    { id:11, window:'e26', player:'Javier Ortiz', posAge:'GK · 29', posShort:'Gardien', meta:'Gardien · 29 ans · ESP', league:'ll',
+      from:{name:'Atlético',abbr:'ATM',color:'#8a3535'}, to:{name:'Sevilla',abbr:'SEV',color:'#b03030'},
+      fee:'€15M', step:4, reliability:72, updated:'il y a 2j', breaking:false, type:'Transfert sec', typeShort:'Sec', contract:'3 ans',
+      mv:'€12M', wage:'€3M/an', contractLen:'3 ans · 2029', contractUntil:'2026', fromLeague:'La Liga', fromRank:'3ᵉ', toRank:'7ᵉ', posGroup:'défensive' },
+    { id:12, window:'e26', player:'Felix Braun', posAge:'LW · 24', posShort:'Ailier gauche', meta:'Ailier gauche · 24 ans · GER', league:'bl',
+      from:{name:'Leipzig',abbr:'LEI',color:'#c04a4a'}, to:{name:'Dortmund',abbr:'DOR',color:'#c9a227'},
+      fee:'€40M', step:5, reliability:82, updated:'il y a 6h', breaking:false, type:'Transfert sec', typeShort:'Sec', contract:'5 ans',
+      mv:'€36M', wage:'€6M/an', contractLen:'5 ans · 2031', contractUntil:'2027', fromLeague:'Bundesliga', fromRank:'4ᵉ', toRank:'1ᵉʳ', posGroup:'offensive' },
+    { id:13, window:'e26', player:'Nathan Price', posAge:'ST · 20', posShort:'Avant-centre', meta:'Avant-centre · 20 ans · ENG', league:'pl',
+      from:{name:'Seaside',abbr:'SEA',color:'#2f8a9a'}, to:{name:'London City',abbr:'LDN',color:'#6a8ac0'},
+      fee:'€35M', step:2, reliability:44, updated:'il y a 3j', breaking:false, type:'Transfert sec', typeShort:'Sec', contract:'5 ans',
+      mv:'€28M', wage:'€5M/an', contractLen:'5 ans · 2031', contractUntil:'2027', fromLeague:'Premier League', fromRank:'11ᵉ', toRank:'4ᵉ', posGroup:'offensive' },
+
+    // ===== HIVER 2026 (clôturé — officialisés) =====
+    { id:20, window:'h26', player:'Carlos Mendez', posAge:'CM · 26', posShort:'Milieu central', meta:'Milieu central · 26 ans · URU', league:'pl',
+      from:{name:'River',abbr:'RIV',color:'#c23a3a'}, to:{name:'Manchester',abbr:'MCR',color:'#b0392b'},
+      fee:'€40M', step:6, reliability:100, updated:'janv. 2026', breaking:false, type:'Transfert sec', typeShort:'Sec', contract:'4 ans',
+      mv:'€36M', wage:'€6M/an', contractLen:'4 ans · 2030', contractUntil:'2026', fromLeague:'Primera AR', fromRank:'1ᵉʳ', toRank:'2ᵉ', posGroup:'créative' },
+    { id:21, window:'h26', player:'Erik Sørensen', posAge:'RB · 27', posShort:'Latéral droit', meta:'Latéral droit · 27 ans · DEN', league:'pl',
+      from:{name:'Ajax',abbr:'AJX',color:'#c85a3a'}, to:{name:'Newcastle',abbr:'NEW',color:'#3a4550'},
+      fee:'€26M', step:6, reliability:100, updated:'janv. 2026', breaking:false, type:'Transfert sec', typeShort:'Sec', contract:'3 ans',
+      mv:'€22M', wage:'€4M/an', contractLen:'3 ans · 2029', contractUntil:'2026', fromLeague:'Eredivisie', fromRank:'2ᵉ', toRank:'5ᵉ', posGroup:'défensive' },
+    { id:22, window:'h26', player:'Paulo Vitor', posAge:'AM · 24', posShort:'Meneur de jeu', meta:'Meneur de jeu · 24 ans · BRA', league:'l1',
+      from:{name:'Benfica',abbr:'BEN',color:'#b03030'}, to:{name:'Paris SG',abbr:'PSG',color:'#2a3a6a'},
+      fee:'€52M', step:6, reliability:100, updated:'févr. 2026', breaking:false, type:'Transfert sec', typeShort:'Sec', contract:'5 ans',
+      mv:'€48M', wage:'€8M/an', contractLen:'5 ans · 2031', contractUntil:'2027', fromLeague:'Liga Nos', fromRank:'1ᵉʳ', toRank:'1ᵉʳ', posGroup:'créative' },
+    { id:23, window:'h26', player:'Hans Weber', posAge:'DM · 25', posShort:'Milieu défensif', meta:'Milieu défensif · 25 ans · GER', league:'bl',
+      from:{name:'Bremen',abbr:'BRE',color:'#3a7a4a'}, to:{name:'Dortmund',abbr:'DOR',color:'#c9a227'},
+      fee:'€30M', step:6, reliability:100, updated:'janv. 2026', breaking:false, type:'Transfert sec', typeShort:'Sec', contract:'4 ans',
+      mv:'€27M', wage:'€5M/an', contractLen:'4 ans · 2030', contractUntil:'2026', fromLeague:'Bundesliga', fromRank:'9ᵉ', toRank:'1ᵉʳ', posGroup:'défensive' },
+
+    // ===== ÉTÉ 2025 (clôturé — officialisés) =====
+    { id:30, window:'e25', player:'Luca Moretti', posAge:'CF · 28', posShort:'Attaquant', meta:'Attaquant · 28 ans · ITA', league:'sa',
+      from:{name:'Napoli',abbr:'NAP',color:'#2f7fb0'}, to:{name:'Milan',abbr:'MIL',color:'#a0402f'},
+      fee:'€44M', step:6, reliability:100, updated:'août 2025', breaking:false, type:'Transfert sec', typeShort:'Sec', contract:'4 ans',
+      mv:'€40M', wage:'€7M/an', contractLen:'4 ans · 2029', contractUntil:'2025', fromLeague:'Serie A', fromRank:'3ᵉ', toRank:'3ᵉ', posGroup:'offensive' },
+    { id:31, window:'e25', player:'Adem Yılmaz', posAge:'LW · 23', posShort:'Ailier gauche', meta:'Ailier gauche · 23 ans · TUR', league:'l1',
+      from:{name:'Galatasaray',abbr:'GAL',color:'#c0402a'}, to:{name:'Marseille',abbr:'OM',color:'#2f7fb0'},
+      fee:'€20M', step:6, reliability:100, updated:'juil. 2025', breaking:false, type:'Transfert sec', typeShort:'Sec', contract:'4 ans',
+      mv:'€18M', wage:'€4M/an', contractLen:'4 ans · 2029', contractUntil:'2025', fromLeague:'Süper Lig', fromRank:'1ᵉʳ', toRank:'2ᵉ', posGroup:'offensive' },
+    { id:32, window:'e25', player:'Kai Johansson', posAge:'CB · 26', posShort:'Défenseur central', meta:'Défenseur central · 26 ans · SWE', league:'pl',
+      from:{name:'Copenhagen',abbr:'CPH',color:'#4a6a9a'}, to:{name:'Manchester',abbr:'MCR',color:'#b0392b'},
+      fee:'€38M', step:6, reliability:100, updated:'juil. 2025', breaking:false, type:'Transfert sec', typeShort:'Sec', contract:'5 ans',
+      mv:'€34M', wage:'€6M/an', contractLen:'5 ans · 2030', contractUntil:'2025', fromLeague:'Superliga', fromRank:'1ᵉʳ', toRank:'2ᵉ', posGroup:'défensive' },
+  ];
+
+  tier(step) {
+    if (step >= 5) return { color:'#4cc38a', glyph:'●●●', label: step >= 6 ? 'officiel' : 'fort', badgeBg:'rgba(76,195,138,0.10)', badgeBorder:'rgba(76,195,138,0.40)' };
+    if (step >= 3) return { color:'#f5b301', glyph:'●●○', label:'modéré', badgeBg:'rgba(245,179,1,0.10)', badgeBorder:'rgba(245,179,1,0.40)' };
+    return { color:'#98a2b3', glyph:'●○○', label:'faible', badgeBg:'rgba(152,162,179,0.12)', badgeBorder:'rgba(152,162,179,0.40)' };
+  }
+
+  cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+  parseFee(fee) { const n = Number(String(fee).replace(/[^0-9.]/g, '')); return Number.isFinite(n) ? n : 0; }
+  fmtMoney(m) { return m >= 1000 ? '€' + (m / 1000).toFixed(1) + 'B' : '€' + Math.round(m) + 'M'; }
+  winItems(win) { return this.RAW.filter(t => t.window === win); }
+
+  decorate(t) {
+    const lg = this.LEAGUES.find(l => l.id === t.league) || this.LEAGUES[0];
+    const ti = this.tier(t.step);
+    const onColor = t.step >= 6 ? '#4cc38a' : '#f5b301';
+    const segs = Array.from({ length: 6 }, (_, i) => ({ bg: i < t.step ? onColor : 'rgba(255,255,255,0.10)' }));
+    return { ...t, leagueName: lg.name, leagueColor: lg.color,
+      tierColor: ti.color, tierBadgeBg: ti.badgeBg, tierBadgeBorder: ti.badgeBorder,
+      signalGlyph: ti.glyph, signalLabel: this.cap(ti.label),
+      segs, stepLabel: this.STEPS[t.step - 1],
+      fromLogoId: 'club-' + t.from.abbr.toLowerCase(),
+      toLogoId: 'club-' + t.to.abbr.toLowerCase() };
+  }
+
+  chips(active, setter) {
+    return this.LEAGUES.map(l => ({ ...l, active: l.id === active, onClick: () => this.setState({ [setter]: l.id }) }));
+  }
+
+  windowChips() {
+    return this.WINDOWS.map(w => {
+      const on = w.id === this.state.window;
+      return { id:w.id, label:w.label, sub:w.sub, active:on,
+        bg: on ? 'linear-gradient(135deg,#f5b301,#e0870a)' : 'transparent',
+        color: on ? '#1a1206' : '#a8a196',
+        glow: on ? '0 0 16px rgba(245,179,1,0.45)' : 'none',
+        onClick: () => this.setState({ window: w.id }) };
+    });
+  }
+
+  tabs(active, key, resetDetail) {
+    const defs = [
+      { id:'flux', label:'Flux', icon:'bolt' },
+      { id:'champ', label:'Ligues', icon:'emoji_events' },
+      { id:'suivis', label:'Suivis', icon:'star' },
+      { id:'alertes', label:'Alertes', icon:'notifications' },
+    ];
+    return defs.map(d => {
+      const on = d.id === active;
+      return { ...d, active: on, color: on ? '#f5cf5a' : '#6e675b',
+        fill: on ? "'FILL' 1, 'opsz' 24" : "'FILL' 0, 'opsz' 24",
+        glow: on ? '0 0 14px rgba(245,179,1,0.75)' : 'none',
+        onClick: () => this.setState(resetDetail ? { [key]: d.id, screenA: 'tabs' } : { [key]: d.id }) };
+    });
+  }
+
+  leaguesOverview(win) {
+    const real = this.LEAGUES.filter(l => l.id !== 'all');
+    const items = this.winItems(win);
+    const rows = real.map(l => ({ l, items: items.filter(t => t.league === l.id) }));
+    const maxCount = Math.max(1, ...rows.map(r => r.items.length));
+    return rows.map(r => {
+      const total = r.items.reduce((s, t) => s + this.parseFee(t.fee), 0);
+      return { name: r.l.name, short: r.l.short, color: r.l.color,
+        count: r.items.length, totalStr: this.fmtMoney(total),
+        barPct: Math.round((r.items.length / maxCount) * 100) + '%',
+        onOpen: () => this.setState({ screenA: 'league', selLeague: r.l.id }) };
+    });
+  }
+
+  // clubs d'une ligue sur une fenêtre, avec arrivées/départs
+  leagueClubs(leagueId, win) {
+    const items = this.winItems(win);
+    const rows = [];
+    Object.keys(this.CLUBS).forEach(abbr => {
+      const club = this.CLUBS[abbr];
+      if (club.lg !== leagueId) return;
+      const arrivals = items.filter(t => t.to.abbr === abbr);
+      const departures = items.filter(t => t.from.abbr === abbr);
+      if (arrivals.length + departures.length === 0) return;
+      const moneyIn = arrivals.reduce((s, t) => s + this.parseFee(t.fee), 0);
+      const moneyOut = departures.reduce((s, t) => s + this.parseFee(t.fee), 0);
+      const net = moneyOut - moneyIn;
+      rows.push({ abbr, name: club.n, color: club.c, logoId: 'club-' + abbr.toLowerCase(),
+        arr: arrivals.length, dep: departures.length,
+        moneyIn, moneyOut, net,
+        netStr: (net >= 0 ? '+' : '−') + this.fmtMoney(Math.abs(net)).replace('€', '€'),
+        netColor: net >= 0 ? '#4cc38a' : '#e08a6f',
+        onOpen: () => this.setState({ screenA: 'club', selClub: abbr }) });
+    });
+    rows.sort((a, b) => (b.arr + b.dep) - (a.arr + a.dep));
+    return rows;
+  }
+
+  leagueView(leagueId, win) {
+    const lg = this.LEAGUES.find(l => l.id === leagueId) || this.LEAGUES[1];
+    const clubs = this.leagueClubs(leagueId, win);
+    const items = this.winItems(win).filter(t => t.league === leagueId);
+    const volume = items.reduce((s, t) => s + this.parseFee(t.fee), 0);
+    return { name: lg.name, short: lg.short, color: lg.color,
+      clubs, clubCount: clubs.length,
+      arrTotal: clubs.reduce((s, c) => s + c.arr, 0),
+      depTotal: clubs.reduce((s, c) => s + c.dep, 0),
+      volume: this.fmtMoney(volume) };
+  }
+
+  mvRow(t, dir, backTo) {
+    const d = this.decorate(t);
+    const other = dir === 'in' ? t.from : t.to;
+    return { ...d, dir, otherName: other.name, otherAbbr: other.abbr, otherColor: other.color,
+      otherLogoId: 'club-' + other.abbr.toLowerCase(),
+      onOpen: () => this.setState({ screenA: 'detail', selA: t.id, backTo }) };
+  }
+
+  clubView(abbr, win) {
+    const club = this.CLUBS[abbr] || { n: abbr, lg: 'pl', c: '#555' };
+    const lg = this.LEAGUES.find(l => l.id === club.lg) || this.LEAGUES[1];
+    const items = this.winItems(win);
+    const arrivals = items.filter(t => t.to.abbr === abbr).map(t => this.mvRow(t, 'in', 'club'));
+    const departures = items.filter(t => t.from.abbr === abbr).map(t => this.mvRow(t, 'out', 'club'));
+    const moneyIn = items.filter(t => t.to.abbr === abbr).reduce((s, t) => s + this.parseFee(t.fee), 0);
+    const moneyOut = items.filter(t => t.from.abbr === abbr).reduce((s, t) => s + this.parseFee(t.fee), 0);
+    const net = moneyOut - moneyIn;
+    return { abbr, name: club.n, color: club.c, logoId: 'club-' + abbr.toLowerCase(),
+      leagueName: lg.name,
+      arrivals, departures,
+      arrCount: arrivals.length, depCount: departures.length,
+      hasArr: arrivals.length > 0, noArr: arrivals.length === 0,
+      hasDep: departures.length > 0, noDep: departures.length === 0,
+      inStr: this.fmtMoney(moneyIn), outStr: this.fmtMoney(moneyOut),
+      netStr: (net >= 0 ? '+' : '−') + this.fmtMoney(Math.abs(net)),
+      netColor: net >= 0 ? '#4cc38a' : '#e08a6f' };
+  }
+
+  detailStepsData(step) {
+    return this.STEPS.map((label, i) => {
+      const state = i < step - 1 ? 'done' : i === step - 1 ? 'current' : 'todo';
+      const done = state === 'done', current = state === 'current';
+      return { label,
+        glyph: done ? '✓' : current ? '●' : '',
+        glyphColor: (done || current) ? '#1a1206' : '#6e675b',
+        nodeBg: (done || current) ? '#f5b301' : 'transparent',
+        nodeBorder: (done || current) ? 'none' : '1.5px solid rgba(255,255,255,0.18)',
+        nodeShadow: current ? '0 0 0 3px rgba(245,179,1,0.18),0 0 16px rgba(245,179,1,0.45)' : 'none',
+        lineBg: done ? '#f5b301' : 'rgba(255,255,255,0.12)',
+        labelColor: state === 'todo' ? '#8a8377' : '#f4f1ea',
+        stateText: done ? 'Étape validée' : current ? 'En cours' : 'À venir',
+        hasLine: i < this.STEPS.length - 1 };
+    });
+  }
+
+  buildDetail(t) {
+    const strong = t.step >= 3;
+    const offered = t.step >= 2;
+    const official = t.step >= 6;
+    const sortantLines = [
+      { ic: (strong || official) ? '✓' : '•', col: (strong || official) ? '#4cc38a' : '#8a8377', text: official ? 'Vente actée' : strong ? 'Ouvert à la vente' : "À l'écoute d'offres" },
+      { ic:'•', col:'#8a8377', text:'Sous contrat ' + t.contractUntil },
+      { ic:'•', col:'#8a8377', text:'Valeur ' + t.mv },
+    ];
+    const entrantLines = [
+      { ic: offered ? '✓' : '•', col: offered ? '#4cc38a' : '#8a8377', text:'Priorité ' + t.posGroup },
+      { ic: offered ? '✓' : '•', col: offered ? '#4cc38a' : '#8a8377', text: official ? ('Achat finalisé · ' + t.fee) : offered ? ('Offre ' + t.fee + ' soumise') : 'Intérêt exploratoire' },
+      { ic:'•', col:'#8a8377', text:'Salaire ' + t.wage },
+    ];
+
+    const timeline = this.sourcesFor(t);
+    const primary = timeline.find(s => s.primary) || timeline[0];
+    const relays = timeline.filter(s => !s.primary);
+    const corrobCount = timeline.length;
+    const corrobLabel = corrobCount <= 1 ? 'Source unique — non corroborée' : 'Confirmé par ' + corrobCount + ' sources indépendantes';
+    const srcSegs = Array.from({ length: 5 }, (_, i) => ({ bg: i < Math.min(corrobCount, 5) ? '#4cc38a' : 'rgba(255,255,255,0.12)' }));
+
+    return { ...t,
+      badgeBg: t.tierBadgeBg, badgeBorder: t.tierBadgeBorder,
+      sortantLines, entrantLines,
+      detailSteps: this.detailStepsData(t.step),
+      timeline, primary, relays, hasRelays: relays.length > 0,
+      corrobCount, corrobLabel, srcSegs,
+      photoId: 'player-' + t.id };
+  }
+
+  renderVals() {
+    const win = this.state.window;
+    const winMeta = this.WINDOWS.find(w => w.id === win) || this.WINDOWS[0];
+
+    // tri : à la une d'abord, puis grosses opérations (≥ 60M)
+    const sortKey = (t) => (t.breaking ? 2 : 0) + (this.parseFee(t.fee) >= 60 ? 1 : 0);
+    const bySortKey = (a, b) => sortKey(b) - sortKey(a);
+
+    const filt = (id) => id === 'all' ? this.winItems(win) : this.winItems(win).filter(t => t.league === id);
+    const A = [...filt(this.state.leagueA)].sort(bySortKey).map(t => {
+      const d = this.decorate(t);
+      return { ...d, onOpen: () => this.setState({ screenA: 'detail', selA: t.id, backTo: 'tabs' }) };
+    });
+    // 1b reste sur l'été 2026 en cours
+    const bItems = this.state.leagueB === 'all' ? this.winItems('e26') : this.winItems('e26').filter(t => t.league === this.state.leagueB);
+    const B = [...bItems].sort(bySortKey).map(t => this.decorate(t));
+
+    const sel = this.RAW.find(t => t.id === this.state.selA) || this.RAW[0];
+    const lv = this.leagueView(this.state.selLeague, win);
+    const cv = this.state.selClub ? this.clubView(this.state.selClub, win) : this.clubView('MCR', win);
+
+    const backTo = this.state.backTo;
+    const backLabelA = backTo === 'club' ? cv.name : backTo === 'league' ? lv.name : 'Flux';
+
+    const overview = this.leaguesOverview(win);
+
+    return {
+      windowChips: this.windowChips(),
+      windowShort: winMeta.label, windowFull: winMeta.full,
+      windowDot: winMeta.live ? '#f5b301' : '#8a8377',
+      windowClosed: !winMeta.live,
+      fluxKicker: winMeta.live ? 'Marché des transferts' : 'Archives · ' + winMeta.full,
+      fluxTitle: winMeta.live ? 'En direct' : winMeta.full,
+
+      leaguesA: this.chips(this.state.leagueA, 'leagueA'),
+      leaguesB: this.chips(this.state.leagueB, 'leagueB'),
+      transfersA: A,
+      transfersB: B,
+      countB: String(B.length).padStart(2, '0'),
+      tabsA: this.tabs(this.state.tabA, 'tabA', true),
+      tabsB: this.tabs(this.state.tabB, 'tabB', false),
+
+      showAppA: this.state.screenA === 'tabs',
+      showDetailA: this.state.screenA === 'detail',
+      showLeagueA: this.state.screenA === 'league',
+      showClubA: this.state.screenA === 'club',
+      showSourceA: this.state.screenA === 'source',
+      backToDetail: () => this.setState({ screenA: 'detail' }),
+      srcView: this.sourceProfileView(),
+      showFluxA: this.state.screenA === 'tabs' && this.state.tabA === 'flux',
+      showLiguesA: this.state.screenA === 'tabs' && this.state.tabA === 'champ',
+      showSuivisA: this.state.screenA === 'tabs' && this.state.tabA === 'suivis',
+      showAlertesA: this.state.screenA === 'tabs' && this.state.tabA === 'alertes',
+
+      backA: () => this.setState({ screenA: backTo }),
+      backLabelA,
+      backToLigues: () => this.setState({ screenA: 'tabs', tabA: 'champ' }),
+      backToLeague: () => this.setState({ screenA: 'league' }),
+
+      leaguesOverview: overview,
+      totalCount: this.winItems(win).length,
+      totalCountLabel: winMeta.live ? 'transferts actifs' : 'transferts officialisés',
+      totalMoney: this.fmtMoney(this.winItems(win).reduce((s, t) => s + this.parseFee(t.fee), 0)),
+
+      lgView: lv,
+      clubView: cv,
+      dA: this.buildDetail(this.decorate(sel)),
+    };
+  }
+}
+</script>
+</body>
+</html>
