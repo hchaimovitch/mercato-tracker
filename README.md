@@ -1,25 +1,39 @@
-# CODING AGENTS: READ THIS FIRST
+# Mercato Tracker
 
-This is a **handoff bundle** from Claude Design (claude.ai/design).
+Football transfer-window tracker for the Big 5 European leagues (England, France, Germany, Italy, Spain) — dark mode, amber "breaking news" accent, multi-factor reliability scoring. Implemented from the Claude Design prototype in `project/Mercato.dc.html` (design rationale in `chats/chat1.md`).
 
-A user mocked up designs in HTML/CSS/JS using an AI design tool, then exported this bundle so a coding agent can implement the designs for real.
+## Structure
 
-## What you should do — IMPORTANT
+- `backend/` — Node/Express/TypeScript API serving seeded demo transfer data (windows, leagues, clubs, transfers, sources) and all the derived view logic (reliability tiers, corroboration, league/club rollups).
+- `app/` — Expo/React Native/TypeScript mobile app (iOS/Android) that consumes the backend.
+- `project/`, `chats/` — the original Claude Design handoff bundle, kept for reference.
 
-**Read the chat transcripts first.** There are 1 chat transcript(s) in `chats/`. The transcripts show the full back-and-forth between the user and the design assistant — they tell you **what the user actually wants** and **where they landed** after iterating. Don't skip them. The final HTML files are the output, but the chat is where the intent lives.
+## Running it
 
-**Read `project/Mercato.dc.html` in full.** The user had this file open when they triggered the handoff, so it's almost certainly the primary design they want built. Read it top to bottom — don't skim. Then **follow its imports**: open every file it pulls in (shared components, CSS, scripts) so you understand how the pieces fit together before you start implementing.
+**Backend**
 
-**If anything is ambiguous, ask the user to confirm before you start implementing.** It's much cheaper to clarify scope up front than to build the wrong thing.
+```
+cd backend
+npm install
+npm run dev        # http://localhost:4000
+```
 
-## About the design files
+**App**
 
-The design medium is **HTML/CSS/JS** — these are prototypes, not production code. Your job is to **recreate them pixel-perfectly** in whatever technology makes sense for the target codebase (React, Vue, native, whatever fits). Match the visual output; don't copy the prototype's internal structure unless it happens to fit.
+```
+cd app
+npm install
+npm start           # then press i / a / w, or scan the QR code with Expo Go
+```
 
-**Don't render these files in a browser or take screenshots unless the user asks you to.** Everything you need — dimensions, colors, layout rules — is spelled out in the source. Read the HTML and CSS directly; a screenshot won't tell you anything they don't.
+The app auto-discovers the backend on your LAN via the Expo dev server's host address. To point it at a specific URL instead (e.g. testing in a browser), set `EXPO_PUBLIC_API_URL` in `app/.env`:
 
-## Bundle contents
+```
+EXPO_PUBLIC_API_URL=http://localhost:4000
+```
 
-- `README.md` — this file
-- `chats/` — conversation transcripts (read these!)
-- `project/` — the `App suivi mercato football` project files (HTML prototypes, assets, components)
+## Notes
+
+- Club badges are colored initials, not licensed crests (no real logos are bundled).
+- "Suivis" (followed transfers) is stored locally on-device (AsyncStorage) — no account/auth system.
+- Data is realistic seeded demo content (three mercato windows: Été 2026 live, Hiver 2026 and Été 2025 archived/no-rumor), not a live data feed.
