@@ -1,0 +1,63 @@
+// Client API-Football (api-sports.io). Non testé avec une vraie clé depuis cet
+// environnement (aucune clé disponible ici) — câblé strictement sur la doc
+// publique. Vérifie le premier run réel : `npm run sync:once` puis contrôle les
+// logs avant de laisser tourner le planificateur automatique.
+//
+// Deux façons d'accéder à l'API sont supportées, au choix via API_FOOTBALL_HOST :
+//  - direct (api-sports.io)      → header x-apisports-key
+//  - via RapidAPI                → headers x-rapidapi-key / x-rapidapi-host
+
+const DIRECT_HOST = 'v3.football.api-sports.io';
+const RAPIDAPI_HOST = 'api-football-v1.p.rapidapi.com';
+
+function baseUrlAndHeaders(): { base: string; headers: Record<string, string> } {
+  const key = process.env.API_FOOTBALL_KEY;
+  if (!key) throw new Error('API_FOOTBALL_KEY manquant dans la config');
+  const viaRapidApi = process.env.API_FOOTBALL_VIA_RAPIDAPI === 'true';
+  if (viaRapidApi) {
+    return { base: `https://${RAPIDAPI_HOST}/v3`, headers: { 'x-rapidapi-key': key, 'x-rapidapi-host': RAPIDAPI_HOST } };
+  }
+  return { base: `https://${DIRECT_HOST}`, headers: { 'x-apisports-key': key } };
+}
+
+async function apiFootballGet<T>(path: string, params: Record<string, string | number>): Promise<T> {
+  const { base, headers } = baseUrlAndHeaders();
+  const url = new URL(base + path);
+  for (const [k, v] of Object.entries(params)) url.searchParams.set(k, String(v));
+  const res = await fetch(url.toString(), { headers });
+  if (!res.ok) throw new Error(`API-Football ${path} → HTTP ${res.status}`);
+  const json = (await res.json()) as { response: T; errors?: unknown };
+  return json.response;
+}
+
+export interface ApiFootballTeam {
+  team: { id: number; name: string };
+}
+
+export function getTeams(leagueApiId: number, season: number): Promise<ApiFootballTeam[]> {
+  return apiFootballGet<ApiFootballTeam[]>('/teams', { league: leagueApiId, season });
+}
+
+export interface ApiFootballTransferEntry {
+  date: string;
+  type: string | null;
+  teams: {
+    in: { id: number; name: string } | null;
+    out: { id: number; name: string } | null;
+  };
+}
+
+export interface ApiFootballPlayerTransfers {
+  player: { id: number; name: string };
+  transfers: ApiFootballTransferEntry[];
+}
+
+export function getTransfersForTeam(teamApiId: number): Promise<ApiFootballPlayerTransfers[]> {
+  return apiFootballGet<ApiFootballPlayerTransfers[]>('/transfers', { team: teamApiId });
+}
+
+/** Heuristique standard "saison = année de début" (juillet→juin) — à ajuster si l'API renvoie un mismatch. */
+export function saisonCourante(date = new Date()): number {
+  const mois = date.getUTCMonth() + 1;
+  return mois >= 7 ? date.getUTCFullYear() : date.getUTCFullYear() - 1;
+}

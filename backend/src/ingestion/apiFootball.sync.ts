@@ -1,0 +1,113 @@
+import { fenetrePourDate } from '../repo/fenetres.repo.js';
+import { listLeagues } from '../repo/leagues.repo.js';
+import { getClubByApiFootballId, listerClubsBig5, resoudreOuCreerClubExterne, upsertClubFromApiFootball } from '../repo/clubs.repo.js';
+import { getEtat, getEtatJson, setEtat, setEtatJson } from '../repo/syncState.repo.js';
+import { enregistrerCitation } from './matching.js';
+import { appelsRestants, enregistrerAppel, peutAppeler } from './quota.js';
+import { getTeams, getTransfersForTeam, saisonCourante } from './apiFootball.client.js';
+import type { LeagueId } from '../types.js';
+
+const PROVIDER = 'api_football';
+const PLAFOND_JOURNALIER = Number(process.env.API_FOOTBALL_DAILY_CAP || 90); // marge sous le quota gratuit de 100/jour
+const TAILLE_LOT_PAR_RUN = Number(process.env.API_FOOTBALL_BATCH_SIZE || 20);
+const EQUIPES_TTL_JOURS = 7;
+
+function joursDepuis(dateIso: string): number {
+  return (Date.now() - new Date(dateIso).getTime()) / 86_400_000;
+}
+
+/** Rafraîchit la liste des clubs par championnat — rare (1x/semaine), donc peu coûteux en quota. */
+export async function synchroniserEquipes(): Promise<void> {
+  for (const league of listLeagues()) {
+    if (!league.api_football_id) continue;
+    const cle = `equipes_maj:${league.id}`;
+    const derniereMaj = getEtat(cle);
+    if (derniereMaj && joursDepuis(derniereMaj) < EQUIPES_TTL_JOURS) continue;
+    if (!peutAppeler(PROVIDER, PLAFOND_JOURNALIER)) {
+      console.log(`[api-football] quota atteint, report du rafraîchissement des clubs pour ${league.id}`);
+      return;
+    }
+    const equipes = await getTeams(league.api_football_id, saisonCourante());
+    enregistrerAppel(PROVIDER);
+    for (const e of equipes) upsertClubFromApiFootball(e.team.name, league.id as LeagueId, e.team.id);
+    setEtat(cle, new Date().toISOString());
+    console.log(`[api-football] ${equipes.length} clubs synchronisés pour ${league.id}`);
+  }
+}
+
+interface FileAttente {
+  clubIds: number[];
+}
+
+/** Synchronise les transferts confirmés, par lot, en tournante sur l'ensemble des clubs Big 5 pour respecter le quota. */
+export async function synchroniserTransfertsOfficiels(): Promise<void> {
+  await synchroniserEquipes();
+
+  const clubsParId = new Map(listerClubsBig5().map((c) => [c.id, c]));
+
+  let file = getEtatJson<FileAttente>('file_clubs_transferts', { clubIds: [] });
+  if (file.clubIds.length === 0) {
+    file = { clubIds: [...clubsParId.keys()] };
+    console.log(`[api-football] nouvelle tournée de synchronisation : ${file.clubIds.length} clubs`);
+  }
+
+  const restants = appelsRestants(PROVIDER, PLAFOND_JOURNALIER);
+  const taille = Math.max(0, Math.min(TAILLE_LOT_PAR_RUN, restants));
+  const lot = file.clubIds.slice(0, taille);
+  const reste = file.clubIds.slice(taille);
+  setEtatJson('file_clubs_transferts', { clubIds: reste });
+
+  if (lot.length === 0) {
+    console.log('[api-football] rien à synchroniser ce passage (quota épuisé ou lot vide)');
+    return;
+  }
+
+  for (const clubId of lot) {
+    const club = clubsParId.get(clubId);
+    if (!club?.api_football_id) continue;
+    if (!peutAppeler(PROVIDER, PLAFOND_JOURNALIER)) break;
+
+    let transferts;
+    try {
+      transferts = await getTransfersForTeam(club.api_football_id);
+      enregistrerAppel(PROVIDER);
+    } catch (err) {
+      console.error(`[api-football] échec sync transferts club ${club.nom} :`, err);
+      continue;
+    }
+
+    for (const joueurTransferts of transferts) {
+      for (const t of joueurTransferts.transfers) {
+        if (!t.teams.in || !t.teams.out) continue;
+        const fenetre = fenetrePourDate(t.date);
+        if (!fenetre) continue; // hors des fenêtres suivies
+
+        const estEntrant = t.teams.in.id === club.api_football_id;
+        const estSortant = t.teams.out.id === club.api_football_id;
+        if (!estEntrant && !estSortant) continue;
+
+        const autreCote = estEntrant ? t.teams.out : t.teams.in;
+        const autreClub = getClubByApiFootballId(autreCote.id) ?? resoudreOuCreerClubExterne(autreCote.id, autreCote.name);
+
+        const clubEntrantId = estEntrant ? club.id : autreClub.id;
+        const clubSortantId = estEntrant ? autreClub.id : club.id;
+
+        enregistrerCitation({
+          joueur: joueurTransferts.player.name,
+          clubSortantId,
+          clubEntrantId,
+          championnatId: club.championnat_id as LeagueId,
+          fenetreId: fenetre.id,
+          statutPropose: 'officiel',
+          montant: t.type,
+          date: t.date,
+          sourceNom: 'API-Football (confirmation officielle)',
+          sourceCategorie: 'club_officiel',
+          origine: 'automatique_api',
+        });
+      }
+    }
+  }
+
+  console.log(`[api-football] lot de ${lot.length} clubs synchronisé, ${reste.length} restants dans la file`);
+}

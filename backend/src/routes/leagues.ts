@@ -1,24 +1,24 @@
 import { Router } from 'express';
-import { LEAGUES } from '../data/seed.js';
-import { leagueView, leaguesOverview } from '../domain/leagues.js';
+import { listLeagues } from '../repo/leagues.repo.js';
+import { leagueView, leaguesOverview } from '../domain/leagueViews.js';
 import type { LeagueId } from '../types.js';
-import { windowFromQuery } from './util.js';
+import { fenetreFromQuery } from './util.js';
 
 export const leaguesRouter = Router();
 
 leaguesRouter.get('/', (_req, res) => {
-  res.json(LEAGUES);
+  res.json(listLeagues().map((l) => ({ id: l.id, name: l.nom, short: l.code_court, color: l.couleur })));
 });
 
 leaguesRouter.get('/overview', (req, res) => {
-  res.json(leaguesOverview(windowFromQuery(req)));
+  res.json(leaguesOverview(fenetreFromQuery(req).id));
 });
 
 leaguesRouter.get('/:id', (req, res) => {
   const id = req.params.id as LeagueId;
-  if (!LEAGUES.some((l) => l.id === id)) {
+  if (!listLeagues().some((l) => l.id === id)) {
     res.status(404).json({ error: 'Unknown league' });
     return;
   }
-  res.json(leagueView(id, windowFromQuery(req)));
+  res.json(leagueView(id, fenetreFromQuery(req).id));
 });

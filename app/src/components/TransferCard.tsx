@@ -35,8 +35,8 @@ export function TransferCard({ transfer: t, onPress }: TransferCardProps) {
       </View>
 
       <View>
-        <Text style={styles.player}>{t.player}</Text>
-        <Text style={styles.meta}>{t.meta}</Text>
+        <Text style={styles.player}>{t.joueur}</Text>
+        {t.meta && <Text style={styles.meta}>{t.meta}</Text>}
       </View>
 
       <View style={styles.faceRow}>
@@ -60,22 +60,24 @@ export function TransferCard({ transfer: t, onPress }: TransferCardProps) {
       <View style={styles.metricsRow}>
         <View>
           <Text style={styles.metricLabel}>MONTANT</Text>
-          <Text style={styles.fee}>{t.fee}</Text>
+          <Text style={styles.fee}>{t.fee ?? 'Inconnu'}</Text>
         </View>
         <View style={styles.reliabilityBlock}>
           <SignalBadge tier={t.tier} />
-          <View style={styles.reliabilityValue}>
-            <Text style={styles.reliabilityNum}>{t.reliability}</Text>
-            <Text style={styles.reliabilityPct}>%</Text>
-          </View>
+          {t.scoreFiabilite !== null && (
+            <View style={styles.reliabilityValue}>
+              <Text style={styles.reliabilityNum}>{t.scoreFiabilite}</Text>
+              <Text style={styles.reliabilityPct}>%</Text>
+            </View>
+          )}
         </View>
       </View>
 
       <View style={styles.stepBlock}>
         <ProgressSegments segs={t.segs} onColor={t.progressColor} />
         <View style={styles.stepRow}>
-          <Text style={styles.stepLabel}>{t.stepLabel}</Text>
-          <Text style={styles.stepCount}>Étape {t.step}/6</Text>
+          <Text style={styles.stepLabel}>{t.statutLabel}</Text>
+          {t.step !== null && <Text style={styles.stepCount}>Étape {t.step}/6</Text>}
         </View>
       </View>
     </Pressable>

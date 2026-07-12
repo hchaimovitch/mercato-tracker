@@ -1,8 +1,9 @@
 import { Router } from 'express';
-import { WINDOWS } from '../data/seed.js';
+import { listFenetres } from '../repo/fenetres.repo.js';
+import { toFenetreView } from '../domain/fenetres.js';
 
 export const windowsRouter = Router();
 
 windowsRouter.get('/', (_req, res) => {
-  res.json(WINDOWS);
+  res.json(listFenetres().map((f) => toFenetreView(f)));
 });

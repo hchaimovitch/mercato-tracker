@@ -1,10 +1,14 @@
 import { Router } from 'express';
-import { sourceProfile } from '../domain/sources.js';
+import { sourceProfileView } from '../domain/sourceProfile.js';
 
 export const sourcesRouter = Router();
 
-sourcesRouter.get('/:name', (req, res) => {
-  const name = decodeURIComponent(req.params.name);
-  const isOfficial = req.query.official === 'true';
-  res.json(sourceProfile(name, isOfficial));
+sourcesRouter.get('/:id', (req, res) => {
+  const id = Number(req.params.id);
+  const profile = sourceProfileView(id);
+  if (!profile) {
+    res.status(404).json({ error: 'Unknown source' });
+    return;
+  }
+  res.json(profile);
 });

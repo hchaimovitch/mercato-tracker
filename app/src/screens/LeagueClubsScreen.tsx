@@ -2,6 +2,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useLeagueView, useWindows } from '../api/hooks';
 import { BackButton } from '../components/BackButton';
+import { EmptyState } from '../components/EmptyState';
 import { HeaderGradient } from '../components/HeaderGradient';
 import { ErrorView, LoadingView } from '../components/ScreenState';
 import type { LiguesStackParamList } from '../navigation/types';
@@ -56,13 +57,16 @@ export function LeagueClubsScreen({ route, navigation }: Props) {
 
       <FlatList
         data={lg.clubs}
-        keyExtractor={(c) => c.abbr}
+        keyExtractor={(c) => String(c.id)}
         contentContainerStyle={styles.list}
         ListHeaderComponent={<Text style={styles.sectionLabel}>CLUBS · TRIÉS PAR ACTIVITÉ</Text>}
+        ListEmptyComponent={
+          <EmptyState glyph="⏳" title="Aucune activité pour l'instant" description="Ce championnat n'a pas encore de mouvement synchronisé sur cette fenêtre." />
+        }
         renderItem={({ item }) => (
           <Pressable
             style={styles.row}
-            onPress={() => navigation.navigate('ClubDetail', { abbr: item.abbr })}
+            onPress={() => navigation.navigate('ClubDetail', { clubId: item.id })}
             accessibilityRole="button"
           >
             <View style={[styles.clubBadge, { backgroundColor: item.color }]}>

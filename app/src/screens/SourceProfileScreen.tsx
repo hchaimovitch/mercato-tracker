@@ -11,8 +11,8 @@ import { manrope } from '../theme/typography';
 type Props = NativeStackScreenProps<DetailStackParamList, 'SourceProfile'>;
 
 export function SourceProfileScreen({ route, navigation }: Props) {
-  const { name, official } = route.params;
-  const profileQuery = useSourceProfile(name, official);
+  const { sourceId } = route.params;
+  const profileQuery = useSourceProfile(sourceId);
 
   if (profileQuery.isLoading) return <LoadingView />;
   if (profileQuery.isError || !profileQuery.data) {
@@ -32,30 +32,34 @@ export function SourceProfileScreen({ route, navigation }: Props) {
       <ScrollView contentContainerStyle={styles.body}>
         <View style={styles.identityRow}>
           <View style={styles.glyphWrap}>
-            <Text style={{ color: s.typeColor, fontSize: 22, fontFamily: manrope(800) }}>{s.typeGlyph}</Text>
+            <Text style={{ color: s.categorieColor, fontSize: 22, fontFamily: manrope(800) }}>{s.categorieGlyph}</Text>
           </View>
           <View style={{ minWidth: 0, flexShrink: 1 }}>
-            <Text style={styles.name}>{s.name}</Text>
-            <Text style={styles.typeLabel}>{s.typeLabel}</Text>
+            <Text style={styles.name}>{s.nom}</Text>
+            <Text style={styles.typeLabel}>{s.categorieLabel}</Text>
           </View>
         </View>
 
         <View style={styles.card}>
-          <Text style={styles.sectionLabel}>FIABILITÉ HISTORIQUE</Text>
-          <View style={styles.reliabilityRow}>
-            <Text style={styles.reliabilityValue}>{s.reliability}</Text>
-            <Text style={styles.reliabilityPct}>%</Text>
-          </View>
+          <Text style={styles.sectionLabel}>FIABILITÉ (SCORE DE WILSON)</Text>
+          {s.reliabilitePct !== null ? (
+            <View style={styles.reliabilityRow}>
+              <Text style={styles.reliabilityValue}>{s.reliabilitePct}</Text>
+              <Text style={styles.reliabilityPct}>%</Text>
+            </View>
+          ) : (
+            <Text style={styles.reliabilityInsuffisante}>Historique insuffisant</Text>
+          )}
           <Text style={styles.trackedLabel}>{s.trackedLabel}</Text>
         </View>
 
         <View style={styles.cardAlt}>
           <Text style={styles.sectionLabel}>CATÉGORIE</Text>
           <View style={styles.categoryRow}>
-            <Text style={{ color: s.typeColor, fontSize: 14 }}>{s.typeGlyph}</Text>
-            <Text style={styles.categoryLabel}>{s.typeLabel}</Text>
+            <Text style={{ color: s.categorieColor, fontSize: 14 }}>{s.categorieGlyph}</Text>
+            <Text style={styles.categoryLabel}>{s.categorieLabel}</Text>
           </View>
-          <Text style={styles.typeDesc}>{s.typeDesc}</Text>
+          <Text style={styles.typeDesc}>{s.categorieDescription}</Text>
         </View>
       </ScrollView>
     </View>
@@ -81,6 +85,7 @@ const styles = StyleSheet.create({
   reliabilityRow: { flexDirection: 'row', alignItems: 'baseline', gap: 5 },
   reliabilityValue: { fontFamily: manrope(800), fontSize: 46, letterSpacing: -1.5, color: colors.textPrimary, lineHeight: 46 },
   reliabilityPct: { fontFamily: manrope(800), fontSize: 20, color: colors.textMuted },
+  reliabilityInsuffisante: { fontFamily: manrope(700), fontSize: 20, color: colors.textMuted },
   trackedLabel: { fontFamily: manrope(600), fontSize: 12.5, color: colors.textMuted },
   categoryRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   categoryLabel: { fontFamily: manrope(700), fontSize: 13, color: colors.textPrimary },

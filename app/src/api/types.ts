@@ -1,7 +1,8 @@
 export type WindowId = 'e26' | 'h26' | 'e25';
 export type LeagueId = 'pl' | 'l1' | 'bl' | 'sa' | 'll';
-export type SourceType = 'officiel' | 'journaliste' | 'media' | 'non_verifie';
-export type StepState = 'done' | 'current' | 'todo';
+export type Statut = 'rumeur' | 'contact_confirme' | 'negociation' | 'accord_clubs' | 'accord_joueur' | 'officiel' | 'annule';
+export type SourceCategorie = 'club_officiel' | 'journaliste_reconnu' | 'media_generaliste' | 'non_verifie';
+export type DetailStepState = 'confirme' | 'non_documente' | 'actuel' | 'a_venir';
 
 export interface Window {
   id: WindowId;
@@ -19,6 +20,7 @@ export interface League {
 }
 
 export interface ClubRef {
+  id: number;
   name: string;
   abbr: string;
   color: string;
@@ -38,66 +40,59 @@ export interface Segment {
 
 export interface TransferCard {
   id: number;
-  player: string;
-  meta: string;
+  joueur: string;
+  meta: string | null;
   updated: string;
   breaking: boolean;
   league: { id: LeagueId; name: string; color: string };
   from: ClubRef;
   to: ClubRef;
-  fee: string;
-  reliability: number;
-  step: number;
-  stepLabel: string;
+  fee: string | null;
+  scoreFiabilite: number | null;
+  statut: Statut;
+  statutLabel: string;
+  step: number | null;
   tier: Tier;
   progressColor: string;
   segs: Segment[];
 }
 
-export interface FaceLine {
-  done: boolean;
-  text: string;
-}
-
 export interface DetailStep {
   label: string;
-  state: StepState;
-  stateText: string;
-  hasLine: boolean;
+  state: DetailStepState;
+  date: string | null;
 }
 
-export interface SourceEntry {
-  name: string;
-  primary: boolean;
-  time: string;
-  official: boolean;
-  type: SourceType;
-  reliability: number;
-  tracked: number | null;
-  typeLabel: string;
-  typeGlyph: string;
-  typeColor: string;
+export interface SourceCitation {
+  sourceId: number;
+  nom: string;
+  categorie: SourceCategorie;
+  categorieLabel: string;
+  categorieGlyph: string;
+  categorieColor: string;
+  reliabilitePct: number | null;
+  n: number;
+  primaire: boolean;
+  date: string;
+  lienSource: string | null;
+  origine: string;
 }
 
 export interface TransferDetail extends TransferCard {
-  mv: string;
   type: string;
-  contractLen: string;
-  wage: string;
-  from: ClubRef & { leagueName: string; rank: string };
-  to: ClubRef & { leagueName: string; rank: string };
-  sortantLines: FaceLine[];
-  entrantLines: FaceLine[];
+  fromLeagueName: string;
+  toLeagueName: string;
+  annule: boolean;
   detailSteps: DetailStep[];
   sources: {
-    primary: SourceEntry;
-    relays: SourceEntry[];
-    hasRelays: boolean;
+    primaire: SourceCitation | null;
+    relais: SourceCitation[];
+    hasRelais: boolean;
     corrobCount: number;
     corrobLabel: string;
     srcSegs: Segment[];
   };
-  timeline: SourceEntry[];
+  timeline: SourceCitation[];
 }
 
 export interface LeagueOverviewRow {
@@ -117,6 +112,7 @@ export interface LeaguesOverview {
 }
 
 export interface ClubActivityRow {
+  id: number;
   abbr: string;
   name: string;
   color: string;
@@ -139,17 +135,17 @@ export interface LeagueView {
 }
 
 export interface ClubMovement {
-  transferId: number;
-  player: string;
-  posShort: string;
-  otherName: string;
-  otherAbbr: string;
-  otherColor: string;
-  fee: string;
+  transfertId: number;
+  joueur: string;
+  autreNom: string;
+  autreAbbr: string;
+  autreCouleur: string;
+  fee: string | null;
   tier: Tier;
 }
 
 export interface ClubView {
+  id: number;
   abbr: string;
   name: string;
   color: string;
@@ -169,11 +165,13 @@ export interface ClubView {
 }
 
 export interface SourceProfile {
-  name: string;
-  reliability: number;
+  nom: string;
+  categorie: SourceCategorie;
+  categorieLabel: string;
+  categorieGlyph: string;
+  categorieColor: string;
+  categorieDescription: string;
+  reliabilitePct: number | null;
+  n: number;
   trackedLabel: string;
-  typeLabel: string;
-  typeGlyph: string;
-  typeColor: string;
-  typeDesc: string;
 }

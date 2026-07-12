@@ -59,18 +59,18 @@ export function useLeagueView(leagueId: LeagueId | null, window: WindowId) {
   });
 }
 
-export function useClubView(abbr: string | null, window: WindowId) {
+export function useClubView(clubId: number | null, window: WindowId) {
   return useQuery({
-    queryKey: ['club', abbr, window],
-    queryFn: () => fetchJson<ClubView>(`/clubs/${abbr}`, { window }),
-    enabled: abbr != null,
+    queryKey: ['club', clubId, window],
+    queryFn: () => fetchJson<ClubView>(`/clubs/${clubId}`, { window }),
+    enabled: clubId != null,
   });
 }
 
-export function useSourceProfile(name: string | null, official: boolean) {
+export function useSourceProfile(sourceId: number | null) {
   return useQuery({
-    queryKey: ['source', name, official],
-    queryFn: () => fetchJson<SourceProfile>(`/sources/${encodeURIComponent(name as string)}`, { official: official ? 'true' : undefined }),
-    enabled: name != null,
+    queryKey: ['source', sourceId],
+    queryFn: () => fetchJson<SourceProfile>(`/sources/${sourceId}`),
+    enabled: sourceId != null,
   });
 }

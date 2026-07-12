@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
 import { useFeed, useLeagues, useWindows } from '../api/hooks';
 import type { LeagueId } from '../api/types';
+import { EmptyState } from '../components/EmptyState';
 import { HeaderGradient } from '../components/HeaderGradient';
 import { LeagueChipRow } from '../components/LeagueChipRow';
 import { ErrorView, LoadingView } from '../components/ScreenState';
@@ -60,6 +61,12 @@ export function FluxScreen({ navigation }: Props) {
         <LoadingView />
       ) : feedQuery.isError ? (
         <ErrorView message={(feedQuery.error as Error).message} onRetry={() => feedQuery.refetch()} />
+      ) : feedQuery.data && feedQuery.data.length === 0 ? (
+        <EmptyState
+          glyph="⏳"
+          title="Aucun transfert pour l'instant"
+          description="La synchronisation avec les sources réelles tourne en tâche de fond (quota limité) — reviens un peu plus tard, ou change de fenêtre/championnat."
+        />
       ) : (
         <FlatList
           data={feedQuery.data}

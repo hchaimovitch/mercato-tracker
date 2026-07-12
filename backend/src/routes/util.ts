@@ -1,9 +1,9 @@
 import type { Request } from 'express';
-import { WINDOWS } from '../data/seed.js';
-import type { WindowId } from '../types.js';
+import { getFenetre, listFenetres } from '../repo/fenetres.repo.js';
+import type { FenetreRow } from '../types.js';
 
-export function windowFromQuery(req: Request): WindowId {
+export function fenetreFromQuery(req: Request): FenetreRow {
   const raw = typeof req.query.window === 'string' ? req.query.window : undefined;
-  const found = WINDOWS.find((w) => w.id === raw);
-  return (found?.id ?? WINDOWS[0].id) as WindowId;
+  const found = raw ? getFenetre(raw) : undefined;
+  return found ?? listFenetres()[0];
 }

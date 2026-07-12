@@ -17,15 +17,15 @@ function MovementRow({ m, accent, preposition, onPress }: { m: ClubMovement; acc
   return (
     <Pressable onPress={onPress} style={styles.movementRow} accessibilityRole="button">
       <View style={[styles.movementBar, { backgroundColor: accent }]} />
-      <View style={[styles.movementBadge, { backgroundColor: m.otherColor }]}>
-        <Text style={styles.movementBadgeText}>{m.otherAbbr}</Text>
+      <View style={[styles.movementBadge, { backgroundColor: m.autreCouleur }]}>
+        <Text style={styles.movementBadgeText}>{m.autreAbbr}</Text>
       </View>
       <View style={styles.movementBody}>
-        <Text style={styles.movementPlayer} numberOfLines={1}>{m.player}</Text>
-        <Text style={styles.movementMeta} numberOfLines={1}>{m.posShort} · {preposition} {m.otherName}</Text>
+        <Text style={styles.movementPlayer} numberOfLines={1}>{m.joueur}</Text>
+        <Text style={styles.movementMeta} numberOfLines={1}>{preposition} {m.autreNom}</Text>
       </View>
       <View style={styles.movementRight}>
-        <Text style={styles.movementFee}>{m.fee}</Text>
+        <Text style={styles.movementFee}>{m.fee ?? 'Inconnu'}</Text>
         <SignalBadge tier={m.tier} glyphSize={10} labelSize={9.5} />
       </View>
     </Pressable>
@@ -33,10 +33,10 @@ function MovementRow({ m, accent, preposition, onPress }: { m: ClubMovement; acc
 }
 
 export function ClubScreen({ route, navigation }: Props) {
-  const { abbr } = route.params;
+  const { clubId } = route.params;
   const { window } = useWindowState();
   const windowsQuery = useWindows();
-  const clubQuery = useClubView(abbr, window);
+  const clubQuery = useClubView(clubId, window);
   const activeWindow = windowsQuery.data?.find((w) => w.id === window);
 
   if (clubQuery.isLoading) return <LoadingView />;
@@ -86,7 +86,7 @@ export function ClubScreen({ route, navigation }: Props) {
           </View>
           {club.hasArr ? (
             club.arrivals.map((m) => (
-              <MovementRow key={m.transferId} m={m} accent={colors.green} preposition="de" onPress={() => navigation.navigate('TransferDetail', { id: m.transferId, backLabel: club.name })} />
+              <MovementRow key={m.transfertId} m={m} accent={colors.green} preposition="de" onPress={() => navigation.navigate('TransferDetail', { id: m.transfertId, backLabel: club.name })} />
             ))
           ) : (
             <Text style={styles.emptyText}>Aucune arrivée sur cette fenêtre.</Text>
@@ -103,7 +103,7 @@ export function ClubScreen({ route, navigation }: Props) {
           </View>
           {club.hasDep ? (
             club.departures.map((m) => (
-              <MovementRow key={m.transferId} m={m} accent={colors.amber} preposition="vers" onPress={() => navigation.navigate('TransferDetail', { id: m.transferId, backLabel: club.name })} />
+              <MovementRow key={m.transfertId} m={m} accent={colors.amber} preposition="vers" onPress={() => navigation.navigate('TransferDetail', { id: m.transfertId, backLabel: club.name })} />
             ))
           ) : (
             <Text style={styles.emptyText}>Aucun départ sur cette fenêtre.</Text>
