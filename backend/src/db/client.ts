@@ -1,7 +1,7 @@
 import { createClient } from '@libsql/client';
-import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
+import { SCHEMA_SQL } from './schema.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -32,8 +32,7 @@ let initialized = false;
 /** Crée le schéma et le référentiel (championnats/fenêtres) au premier démarrage — idempotent. */
 export async function initDb(): Promise<void> {
   if (initialized) return;
-  const schema = readFileSync(path.join(__dirname, 'schema.sql'), 'utf-8');
-  await db.executeMultiple(schema);
+  await db.executeMultiple(SCHEMA_SQL);
 
   for (const l of LEAGUES_REF) {
     await db.execute({

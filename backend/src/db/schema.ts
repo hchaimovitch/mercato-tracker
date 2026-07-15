@@ -1,7 +1,8 @@
--- Schéma réel (remplace les données seed du prototype). Toutes les tables sont
--- créées idempotentes (IF NOT EXISTS) — pas de framework de migration séparé
--- vu la taille du projet, mais chaque changement de schéma doit rester additif.
+// Schéma inline (pas un fichier .sql séparé) : `tsc` ne copie que les .ts vers
+// dist/, un .sql à côté serait absent du build de production — vu à l'usage
+// sur un premier déploiement Render (ENOENT sur schema.sql en prod).
 
+export const SCHEMA_SQL = `
 CREATE TABLE IF NOT EXISTS leagues (
   id TEXT PRIMARY KEY,
   nom TEXT NOT NULL,
@@ -93,3 +94,4 @@ CREATE TABLE IF NOT EXISTS sync_state (
   valeur TEXT,
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
+`;
