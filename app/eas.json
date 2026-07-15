@@ -10,7 +10,7 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "http://REMPLACE-PAR-L-IP-OU-DOMAINE-DU-BACKEND:4000"
+        "EXPO_PUBLIC_API_URL": "https://mercato-backend-d4vj.onrender.com"
       }
     },
     "production": {
