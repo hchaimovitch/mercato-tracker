@@ -2,23 +2,26 @@ import { Router } from 'express';
 import { listLeagues } from '../repo/leagues.repo.js';
 import { leagueView, leaguesOverview } from '../domain/leagueViews.js';
 import type { LeagueId } from '../types.js';
-import { fenetreFromQuery } from './util.js';
+import { asyncHandler, fenetreFromQuery } from './util.js';
 
 export const leaguesRouter = Router();
 
-leaguesRouter.get('/', (_req, res) => {
-  res.json(listLeagues().map((l) => ({ id: l.id, name: l.nom, short: l.code_court, color: l.couleur })));
-});
+leaguesRouter.get('/', asyncHandler(async (_req, res) => {
+  res.json((await listLeagues()).map((l) => ({ id: l.id, name: l.nom, short: l.code_court, color: l.couleur })));
+}));
 
-leaguesRouter.get('/overview', (req, res) => {
-  res.json(leaguesOverview(fenetreFromQuery(req).id));
-});
+leaguesRouter.get('/overview', asyncHandler(async (req, res) => {
+  const fenetre = await fenetreFromQuery(req);
+  res.json(await leaguesOverview(fenetre.id));
+}));
 
-leaguesRouter.get('/:id', (req, res) => {
+leaguesRouter.get('/:id', asyncHandler(async (req, res) => {
   const id = req.params.id as LeagueId;
-  if (!listLeagues().some((l) => l.id === id)) {
+  const leagues = await listLeagues();
+  if (!leagues.some((l) => l.id === id)) {
     res.status(404).json({ error: 'Unknown league' });
     return;
   }
-  res.json(leagueView(id, fenetreFromQuery(req).id));
-});
+  const fenetre = await fenetreFromQuery(req);
+  res.json(await leagueView(id, fenetre.id));
+}));

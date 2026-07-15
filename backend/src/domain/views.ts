@@ -41,11 +41,11 @@ export interface TransferCardDTO {
   segs: { on: boolean }[];
 }
 
-export function toCard(t: TransfertRow): TransferCardDTO {
-  const league = getLeague(t.championnat_id as LeagueId);
-  const from = t.club_sortant_id ? getClub(t.club_sortant_id) : undefined;
-  const to = t.club_entrant_id ? getClub(t.club_entrant_id) : undefined;
-  const hist = historiquePourTransfert(t.id);
+export async function toCard(t: TransfertRow): Promise<TransferCardDTO> {
+  const league = await getLeague(t.championnat_id as LeagueId);
+  const from = t.club_sortant_id ? await getClub(t.club_sortant_id) : undefined;
+  const to = t.club_entrant_id ? await getClub(t.club_entrant_id) : undefined;
+  const hist = await historiquePourTransfert(t.id);
   const derniere = hist[hist.length - 1];
   const step = t.statut === 'annule' ? null : STATUT_STEP[t.statut];
   const segs = Array.from({ length: 6 }, (_, i) => ({ on: step !== null && i < step }));
@@ -121,8 +121,8 @@ export interface TransferDetailDTO extends TransferCardDTO {
   timeline: SourceCitationDTO[];
 }
 
-function toCitationDTO(h: HistoriqueStatutRow): SourceCitationDTO | null {
-  const source = getSourceById(h.source_id);
+async function toCitationDTO(h: HistoriqueStatutRow): Promise<SourceCitationDTO | null> {
+  const source = await getSourceById(h.source_id);
   if (!source) return null;
   const rel = sourceReliability(source.rumeurs_confirmees, source.rumeurs_infirmees);
   const meta = CATEGORIE_META[source.categorie];
@@ -142,15 +142,16 @@ function toCitationDTO(h: HistoriqueStatutRow): SourceCitationDTO | null {
   };
 }
 
-export function buildDetail(t: TransfertRow): TransferDetailDTO {
-  const card = toCard(t);
-  const from = t.club_sortant_id ? getClub(t.club_sortant_id) : undefined;
-  const to = t.club_entrant_id ? getClub(t.club_entrant_id) : undefined;
-  const fromLeague = from ? getLeague(from.championnat_id as LeagueId) : undefined;
-  const toLeague = to ? getLeague(to.championnat_id as LeagueId) : undefined;
+export async function buildDetail(t: TransfertRow): Promise<TransferDetailDTO> {
+  const card = await toCard(t);
+  const from = t.club_sortant_id ? await getClub(t.club_sortant_id) : undefined;
+  const to = t.club_entrant_id ? await getClub(t.club_entrant_id) : undefined;
+  const fromLeague = from ? await getLeague(from.championnat_id as LeagueId) : undefined;
+  const toLeague = to ? await getLeague(to.championnat_id as LeagueId) : undefined;
 
-  const hist = historiquePourTransfert(t.id);
-  const citations = hist.map(toCitationDTO).filter((c): c is SourceCitationDTO => c !== null);
+  const hist = await historiquePourTransfert(t.id);
+  const citationsRaw = await Promise.all(hist.map(toCitationDTO));
+  const citations = citationsRaw.filter((c): c is SourceCitationDTO => c !== null);
   const nonTerminales = citations.filter((c, i) => hist[i].statut !== 'officiel' && hist[i].statut !== 'annule');
 
   const primaire = nonTerminales.find((c) => c.primaire) ?? null;

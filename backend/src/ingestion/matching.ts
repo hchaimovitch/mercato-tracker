@@ -38,12 +38,12 @@ export interface CitationEntrante {
  * recalcule son score — sans jamais faire régresser un statut déjà plus
  * avancé, ni rouvrir un transfert déjà résolu (officiel/annulé).
  */
-export function enregistrerCitation(c: CitationEntrante): number {
+export async function enregistrerCitation(c: CitationEntrante): Promise<number> {
   const cle = cleCorrespondance(c.joueur, c.clubSortantId, c.clubEntrantId, c.fenetreId);
-  let transfert = findTransfertByCle(cle);
+  let transfert = await findTransfertByCle(cle);
 
   if (!transfert) {
-    transfert = insererTransfert({
+    transfert = await insererTransfert({
       joueur: c.joueur,
       clubSortantId: c.clubSortantId,
       clubEntrantId: c.clubEntrantId,
@@ -61,9 +61,9 @@ export function enregistrerCitation(c: CitationEntrante): number {
     return transfert.id; // déjà résolu — une nouvelle rumeur tardive ne rouvre rien
   }
 
-  const source = upsertSource(c.sourceNom, c.sourceCategorie);
-  const estPrimaire = historiquePourTransfert(transfert.id).length === 0;
-  ajouterHistorique({
+  const source = await upsertSource(c.sourceNom, c.sourceCategorie);
+  const estPrimaire = (await historiquePourTransfert(transfert.id)).length === 0;
+  await ajouterHistorique({
     transfertId: transfert.id,
     statut: c.statutPropose,
     date: c.date,
@@ -74,18 +74,18 @@ export function enregistrerCitation(c: CitationEntrante): number {
   });
 
   if (c.statutPropose === 'officiel' || c.statutPropose === 'annule') {
-    resoudreTransfert({ transfertId: transfert.id, resolution: c.statutPropose, date: c.date, sourceId: source.id, origine: c.origine, lienSource: c.lienSource });
+    await resoudreTransfert({ transfertId: transfert.id, resolution: c.statutPropose, date: c.date, sourceId: source.id, origine: c.origine, lienSource: c.lienSource });
   } else {
     // Ne fait avancer le statut affiché que si la nouvelle citation est plus avancée que l'actuel.
-    const actuel = getTransfert(transfert.id)!;
+    const actuel = (await getTransfert(transfert.id))!;
     if (actuel.statut !== 'officiel' && actuel.statut !== 'annule') {
       const stepActuel = STATUT_STEP[actuel.statut];
       const stepPropose = STATUT_STEP[c.statutPropose as Exclude<Statut, 'annule'>];
       if (stepPropose > stepActuel) {
-        mettreAJourStatut(transfert.id, c.statutPropose, actuel.score_fiabilite);
+        await mettreAJourStatut(transfert.id, c.statutPropose, actuel.score_fiabilite);
       }
     }
-    recalculerScoreTransfert(transfert.id);
+    await recalculerScoreTransfert(transfert.id);
   }
 
   return transfert.id;

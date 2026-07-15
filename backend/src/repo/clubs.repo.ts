@@ -1,55 +1,54 @@
 import { db } from '../db/client.js';
 import type { ClubRow, LeagueId } from '../types.js';
 
-/** Ancre FK pour un club hors Big 5 (l'autre bout d'un transfert transfrontalier) — jamais exposé à l'app. */
+/** Ancre pour un club hors Big 5 (l'autre bout d'un transfert transfrontalier) — jamais exposé à l'app. */
 export const LIGUE_EXTERNE = 'ext';
 
-const stmtById = db.prepare<{ id: number }, ClubRow>('SELECT * FROM clubs WHERE id = @id');
-const stmtByApiFootballId = db.prepare<{ id: number }, ClubRow>('SELECT * FROM clubs WHERE api_football_id = @id');
-const stmtByLeague = db.prepare<{ championnat_id: string }, ClubRow>(
-  'SELECT * FROM clubs WHERE championnat_id = @championnat_id ORDER BY nom',
-);
-const stmtInsert = db.prepare<{ nom: string; championnat_id: string; couleur: string; abbr: string; api_football_id: number | null }>(
-  'INSERT INTO clubs (nom, championnat_id, couleur, abbr, api_football_id) VALUES (@nom, @championnat_id, @couleur, @abbr, @api_football_id)',
-);
-
-export function getClub(id: number): ClubRow | undefined {
-  return stmtById.get({ id });
+function toClubRow(r: any): ClubRow {
+  return {
+    id: Number(r.id), nom: r.nom, championnat_id: r.championnat_id, couleur: r.couleur, abbr: r.abbr,
+    api_football_id: r.api_football_id === null ? null : Number(r.api_football_id),
+    sportmonks_id: r.sportmonks_id === null ? null : Number(r.sportmonks_id),
+  };
 }
 
-export function getClubByApiFootballId(id: number): ClubRow | undefined {
-  return stmtByApiFootballId.get({ id });
+export async function getClub(id: number): Promise<ClubRow | undefined> {
+  const rs = await db.execute({ sql: 'SELECT * FROM clubs WHERE id = @id', args: { id } });
+  return rs.rows[0] ? toClubRow(rs.rows[0]) : undefined;
 }
 
-export function listClubsByLeague(championnatId: LeagueId): ClubRow[] {
-  return stmtByLeague.all({ championnat_id: championnatId });
+export async function getClubByApiFootballId(id: number): Promise<ClubRow | undefined> {
+  const rs = await db.execute({ sql: 'SELECT * FROM clubs WHERE api_football_id = @id', args: { id } });
+  return rs.rows[0] ? toClubRow(rs.rows[0]) : undefined;
 }
 
-const stmtAllBig5 = db.prepare<[], ClubRow>(`SELECT * FROM clubs WHERE championnat_id != '${LIGUE_EXTERNE}' ORDER BY nom`);
+export async function listClubsByLeague(championnatId: LeagueId): Promise<ClubRow[]> {
+  const rs = await db.execute({ sql: 'SELECT * FROM clubs WHERE championnat_id = @championnat_id ORDER BY nom', args: { championnat_id: championnatId } });
+  return rs.rows.map(toClubRow);
+}
 
-export function listerClubsBig5(): ClubRow[] {
-  return stmtAllBig5.all();
+export async function listerClubsBig5(): Promise<ClubRow[]> {
+  const rs = await db.execute({ sql: 'SELECT * FROM clubs WHERE championnat_id != @ext ORDER BY nom', args: { ext: LIGUE_EXTERNE } });
+  return rs.rows.map(toClubRow);
 }
 
 /** Couleur d'affichage assignée déterministiquement (pas de vrai logo — badge initiales, cf. décision produit). */
 const PALETTE = ['#b0392b', '#3a4550', '#6a8ac0', '#2f8a9a', '#2a3a6a', '#2f7fb0', '#4a6a8a', '#b03535', '#8a3a3a', '#c9a227', '#a03030', '#c04a4a', '#a0402f', '#8a4a4a', '#4d4d4d', '#3a6a4a', '#b03030'];
 
-export function upsertClubFromApiFootball(nom: string, championnatId: string, apiFootballId: number): ClubRow {
-  const existing = getClubByApiFootballId(apiFootballId);
+export async function upsertClubFromApiFootball(nom: string, championnatId: string, apiFootballId: number): Promise<ClubRow> {
+  const existing = await getClubByApiFootballId(apiFootballId);
   if (existing) return existing;
-  const abbr = nom
-    .split(/\s+/)
-    .map((w) => w[0])
-    .join('')
-    .slice(0, 3)
-    .toUpperCase();
+  const abbr = nom.split(/\s+/).map((w) => w[0]).join('').slice(0, 3).toUpperCase();
   const couleur = PALETTE[apiFootballId % PALETTE.length];
-  stmtInsert.run({ nom, championnat_id: championnatId, couleur, abbr, api_football_id: apiFootballId });
-  return getClubByApiFootballId(apiFootballId)!;
+  await db.execute({
+    sql: 'INSERT INTO clubs (nom, championnat_id, couleur, abbr, api_football_id) VALUES (@nom, @championnat_id, @couleur, @abbr, @api_football_id)',
+    args: { nom, championnat_id: championnatId, couleur, abbr, api_football_id: apiFootballId },
+  });
+  return (await getClubByApiFootballId(apiFootballId))!;
 }
 
 /** Résout (ou crée à la volée) le club de l'autre bout d'un transfert transfrontalier, hors Big 5. */
-export function resoudreOuCreerClubExterne(apiFootballId: number, nom: string): ClubRow {
+export async function resoudreOuCreerClubExterne(apiFootballId: number, nom: string): Promise<ClubRow> {
   return upsertClubFromApiFootball(nom, LIGUE_EXTERNE, apiFootballId);
 }
 
@@ -69,11 +68,12 @@ function normaliserNomClub(nom: string): string {
  * éloignée (ex: abréviation inhabituelle) peut ne pas matcher et fera ignorer
  * la rumeur plutôt que de risquer une fausse correspondance.
  */
-export function trouverClubBig5ParNom(nom: string): ClubRow | undefined {
+export async function trouverClubBig5ParNom(nom: string): Promise<ClubRow | undefined> {
   const cible = normaliserNomClub(nom);
-  return listerClubsBig5().find((c) => normaliserNomClub(c.nom) === cible);
+  const clubs = await listerClubsBig5();
+  return clubs.find((c) => normaliserNomClub(c.nom) === cible);
 }
 
-export function enregistrerSportmonksId(clubId: number, sportmonksId: number): void {
-  db.prepare('UPDATE clubs SET sportmonks_id = ? WHERE id = ?').run(sportmonksId, clubId);
+export async function enregistrerSportmonksId(clubId: number, sportmonksId: number): Promise<void> {
+  await db.execute({ sql: 'UPDATE clubs SET sportmonks_id = @sportmonks_id WHERE id = @id', args: { sportmonks_id: sportmonksId, id: clubId } });
 }

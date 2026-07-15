@@ -1,20 +1,19 @@
 import { db } from '../db/client.js';
 
-const stmtGet = db.prepare<{ cle: string }, { valeur: string }>('SELECT valeur FROM sync_state WHERE cle = @cle');
-const stmtSet = db.prepare<{ cle: string; valeur: string }>(
-  "INSERT INTO sync_state (cle, valeur, updated_at) VALUES (@cle, @valeur, datetime('now')) ON CONFLICT(cle) DO UPDATE SET valeur=excluded.valeur, updated_at=datetime('now')",
-);
-
-export function getEtat(cle: string): string | undefined {
-  return stmtGet.get({ cle })?.valeur;
+export async function getEtat(cle: string): Promise<string | undefined> {
+  const rs = await db.execute({ sql: 'SELECT valeur FROM sync_state WHERE cle = @cle', args: { cle } });
+  return rs.rows[0] ? (rs.rows[0] as any).valeur : undefined;
 }
 
-export function setEtat(cle: string, valeur: string): void {
-  stmtSet.run({ cle, valeur });
+export async function setEtat(cle: string, valeur: string): Promise<void> {
+  await db.execute({
+    sql: "INSERT INTO sync_state (cle, valeur, updated_at) VALUES (@cle, @valeur, datetime('now')) ON CONFLICT(cle) DO UPDATE SET valeur=excluded.valeur, updated_at=datetime('now')",
+    args: { cle, valeur },
+  });
 }
 
-export function getEtatJson<T>(cle: string, defaut: T): T {
-  const raw = getEtat(cle);
+export async function getEtatJson<T>(cle: string, defaut: T): Promise<T> {
+  const raw = await getEtat(cle);
   if (!raw) return defaut;
   try {
     return JSON.parse(raw) as T;
@@ -23,6 +22,6 @@ export function getEtatJson<T>(cle: string, defaut: T): T {
   }
 }
 
-export function setEtatJson(cle: string, valeur: unknown): void {
-  setEtat(cle, JSON.stringify(valeur));
+export async function setEtatJson(cle: string, valeur: unknown): Promise<void> {
+  await setEtat(cle, JSON.stringify(valeur));
 }

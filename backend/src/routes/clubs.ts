@@ -1,15 +1,16 @@
 import { Router } from 'express';
 import { getClub } from '../repo/clubs.repo.js';
 import { clubView } from '../domain/leagueViews.js';
-import { fenetreFromQuery } from './util.js';
+import { asyncHandler, fenetreFromQuery } from './util.js';
 
 export const clubsRouter = Router();
 
-clubsRouter.get('/:id', (req, res) => {
+clubsRouter.get('/:id', asyncHandler(async (req, res) => {
   const id = Number(req.params.id);
-  if (!getClub(id)) {
+  if (!(await getClub(id))) {
     res.status(404).json({ error: 'Unknown club' });
     return;
   }
-  res.json(clubView(id, fenetreFromQuery(req).id));
-});
+  const fenetre = await fenetreFromQuery(req);
+  res.json(await clubView(id, fenetre.id));
+}));

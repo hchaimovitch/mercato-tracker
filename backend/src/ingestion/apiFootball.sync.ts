@@ -18,19 +18,19 @@ function joursDepuis(dateIso: string): number {
 
 /** Rafraîchit la liste des clubs par championnat — rare (1x/semaine), donc peu coûteux en quota. */
 export async function synchroniserEquipes(): Promise<void> {
-  for (const league of listLeagues()) {
+  for (const league of await listLeagues()) {
     if (!league.api_football_id) continue;
     const cle = `equipes_maj:${league.id}`;
-    const derniereMaj = getEtat(cle);
+    const derniereMaj = await getEtat(cle);
     if (derniereMaj && joursDepuis(derniereMaj) < EQUIPES_TTL_JOURS) continue;
-    if (!peutAppeler(PROVIDER, PLAFOND_JOURNALIER)) {
+    if (!(await peutAppeler(PROVIDER, PLAFOND_JOURNALIER))) {
       console.log(`[api-football] quota atteint, report du rafraîchissement des clubs pour ${league.id}`);
       return;
     }
     const equipes = await getTeams(league.api_football_id, saisonCourante());
-    enregistrerAppel(PROVIDER);
-    for (const e of equipes) upsertClubFromApiFootball(e.team.name, league.id as LeagueId, e.team.id);
-    setEtat(cle, new Date().toISOString());
+    await enregistrerAppel(PROVIDER);
+    for (const e of equipes) await upsertClubFromApiFootball(e.team.name, league.id as LeagueId, e.team.id);
+    await setEtat(cle, new Date().toISOString());
     console.log(`[api-football] ${equipes.length} clubs synchronisés pour ${league.id}`);
   }
 }
@@ -43,19 +43,19 @@ interface FileAttente {
 export async function synchroniserTransfertsOfficiels(): Promise<void> {
   await synchroniserEquipes();
 
-  const clubsParId = new Map(listerClubsBig5().map((c) => [c.id, c]));
+  const clubsParId = new Map((await listerClubsBig5()).map((c) => [c.id, c]));
 
-  let file = getEtatJson<FileAttente>('file_clubs_transferts', { clubIds: [] });
+  let file = await getEtatJson<FileAttente>('file_clubs_transferts', { clubIds: [] });
   if (file.clubIds.length === 0) {
     file = { clubIds: [...clubsParId.keys()] };
     console.log(`[api-football] nouvelle tournée de synchronisation : ${file.clubIds.length} clubs`);
   }
 
-  const restants = appelsRestants(PROVIDER, PLAFOND_JOURNALIER);
+  const restants = await appelsRestants(PROVIDER, PLAFOND_JOURNALIER);
   const taille = Math.max(0, Math.min(TAILLE_LOT_PAR_RUN, restants));
   const lot = file.clubIds.slice(0, taille);
   const reste = file.clubIds.slice(taille);
-  setEtatJson('file_clubs_transferts', { clubIds: reste });
+  await setEtatJson('file_clubs_transferts', { clubIds: reste });
 
   if (lot.length === 0) {
     console.log('[api-football] rien à synchroniser ce passage (quota épuisé ou lot vide)');
@@ -65,12 +65,12 @@ export async function synchroniserTransfertsOfficiels(): Promise<void> {
   for (const clubId of lot) {
     const club = clubsParId.get(clubId);
     if (!club?.api_football_id) continue;
-    if (!peutAppeler(PROVIDER, PLAFOND_JOURNALIER)) break;
+    if (!(await peutAppeler(PROVIDER, PLAFOND_JOURNALIER))) break;
 
     let transferts;
     try {
       transferts = await getTransfersForTeam(club.api_football_id);
-      enregistrerAppel(PROVIDER);
+      await enregistrerAppel(PROVIDER);
     } catch (err) {
       console.error(`[api-football] échec sync transferts club ${club.nom} :`, err);
       continue;
@@ -79,7 +79,7 @@ export async function synchroniserTransfertsOfficiels(): Promise<void> {
     for (const joueurTransferts of transferts) {
       for (const t of joueurTransferts.transfers) {
         if (!t.teams.in || !t.teams.out) continue;
-        const fenetre = fenetrePourDate(t.date);
+        const fenetre = await fenetrePourDate(t.date);
         if (!fenetre) continue; // hors des fenêtres suivies
 
         const estEntrant = t.teams.in.id === club.api_football_id;
@@ -87,12 +87,12 @@ export async function synchroniserTransfertsOfficiels(): Promise<void> {
         if (!estEntrant && !estSortant) continue;
 
         const autreCote = estEntrant ? t.teams.out : t.teams.in;
-        const autreClub = getClubByApiFootballId(autreCote.id) ?? resoudreOuCreerClubExterne(autreCote.id, autreCote.name);
+        const autreClub = (await getClubByApiFootballId(autreCote.id)) ?? (await resoudreOuCreerClubExterne(autreCote.id, autreCote.name));
 
         const clubEntrantId = estEntrant ? club.id : autreClub.id;
         const clubSortantId = estEntrant ? autreClub.id : club.id;
 
-        enregistrerCitation({
+        await enregistrerCitation({
           joueur: joueurTransferts.player.name,
           clubSortantId,
           clubEntrantId,

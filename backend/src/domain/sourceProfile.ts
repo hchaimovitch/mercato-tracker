@@ -14,8 +14,8 @@ export interface SourceProfileDTO {
   trackedLabel: string;
 }
 
-export function sourceProfileView(sourceId: number): SourceProfileDTO | undefined {
-  const source = getSourceById(sourceId);
+export async function sourceProfileView(sourceId: number): Promise<SourceProfileDTO | undefined> {
+  const source = await getSourceById(sourceId);
   if (!source) return undefined;
   const rel = sourceReliability(source.rumeurs_confirmees, source.rumeurs_infirmees);
   const meta = CATEGORIE_META[source.categorie];

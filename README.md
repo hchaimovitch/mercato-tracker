@@ -4,7 +4,7 @@ App de suivi du mercato de football pour les 5 grands championnats européens (A
 
 ## Structure
 
-- `backend/` — API Node/Express/TypeScript + base SQLite. Synchronise les transferts officiels confirmés (API-Football) et, en option, les rumeurs (SportMonks Transfer Rumours). Contient tout le moteur métier : score de Wilson, score de fiabilité par transfert, pipeline de recalcul en cascade.
+- `backend/` — API Node/Express/TypeScript. Base de données via `@libsql/client` (compatible SQLite) : un simple fichier local en développement, ou une base **Turso** (gratuite, persistante) en production. Synchronise les transferts officiels confirmés (API-Football) et, en option, les rumeurs (SportMonks Transfer Rumours). Contient tout le moteur métier : score de Wilson, score de fiabilité par transfert, pipeline de recalcul en cascade.
 - `app/` — App Expo/React Native/TypeScript (iOS/Android) qui consomme cette API.
 - `project/`, `chats/` — le bundle Claude Design d'origine (prototype HTML/JS), conservé pour référence.
 
@@ -48,6 +48,43 @@ npm start                # puis i / a / w, ou scanne le QR code
 ```
 
 Voir `app/.env.example` si tu dois forcer l'URL de l'API (ex: test en navigateur web) — sinon l'app détecte automatiquement l'adresse de ton ordinateur sur le réseau local.
+
+## Déployer le backend (pour un .apk qui marche sans dépendre de ton Mac/réseau)
+
+Un backend qui tourne sur ton ordinateur oblige le téléphone à rester sur le même
+réseau. Pour un backend accessible depuis n'importe où, gratuitement :
+
+**1. Base de données Turso** (persistante, gratuite, pas de date d'expiration)
+- Sur https://turso.tech, crée une base de données (bouton "Create Database").
+- Récupère son URL de connexion (commence par `libsql://...`) et crée un jeton
+  d'accès ("Create Token") — les deux sont affichés dans le tableau de bord de
+  la base.
+
+**2. Pousser le code sur GitHub**
+```
+cd ~/Documents/mercatotracker
+git init
+git add .
+git commit -m "Premier commit"
+```
+Crée un dépôt vide sur https://github.com/new (ex: `mercato-tracker`), puis :
+```
+git remote add origin https://github.com/TON-PSEUDO/mercato-tracker.git
+git branch -M main
+git push -u origin main
+```
+
+**3. Render** (hébergement du backend, gratuit, sans carte bancaire)
+- Sur https://render.com, "New +" → "Web Service" → connecte ton compte GitHub → choisis le dépôt.
+- Configure :
+  - **Root Directory** : `backend`
+  - **Build Command** : `npm install && npm run build`
+  - **Start Command** : `npm start`
+  - **Plan** : Free
+- Dans "Environment Variables", ajoute : `API_FOOTBALL_KEY`, `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN` (et `SPORTMONKS_KEY` si tu l'as).
+- Déploie. Render te donne une URL du style `https://mercato-backend-xxxx.onrender.com`.
+
+⚠️ Le plan gratuit de Render met le service en veille après 15 min d'inactivité (environ 1 min pour se réveiller au prochain appel) — normal, pas un bug.
 
 ## Construire le .apk final
 

@@ -1,7 +1,7 @@
 // Lance un seul passage de synchronisation (transferts officiels + rumeurs si
 // configurées) sans démarrer le serveur HTTP ni le planificateur — utile pour
 // vérifier ta clé API-Football/SportMonks avant de laisser tourner le service.
-import '../db/client.js';
+import { initDb } from '../db/client.js';
 import { synchroniserTransfertsOfficiels } from '../ingestion/apiFootball.sync.js';
 import { synchroniserRumeurs } from '../ingestion/sportmonks.sync.js';
 
@@ -10,6 +10,7 @@ async function main() {
     console.error('API_FOOTBALL_KEY manquant — renseigne-le dans backend/.env avant de lancer ce script.');
     process.exit(1);
   }
+  await initDb();
   await synchroniserTransfertsOfficiels();
   await synchroniserRumeurs();
   console.log('Terminé.');

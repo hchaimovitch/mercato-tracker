@@ -3,6 +3,7 @@ import { getTransfert } from '../repo/transferts.repo.js';
 import { enregistrerCitation } from '../ingestion/matching.js';
 import { buildDetail } from '../domain/views.js';
 import type { LeagueId, SourceCategorie, Statut } from '../types.js';
+import { asyncHandler } from './util.js';
 
 export const curationRouter = Router();
 
@@ -15,9 +16,9 @@ const CATEGORIES_VALIDES: SourceCategorie[] = ['club_officiel', 'journaliste_rec
  * précis, ou annulation). Chaque ajustement est tracé (origine='manuel', source
  * nommée explicitement par la personne qui saisit) — jamais anonyme ni silencieux.
  */
-curationRouter.patch('/transferts/:id/statut', (req, res) => {
+curationRouter.patch('/transferts/:id/statut', asyncHandler(async (req, res) => {
   const id = Number(req.params.id);
-  const t = getTransfert(id);
+  const t = await getTransfert(id);
   if (!t) {
     res.status(404).json({ error: 'Unknown transfer' });
     return;
@@ -37,7 +38,7 @@ curationRouter.patch('/transferts/:id/statut', (req, res) => {
     return;
   }
 
-  enregistrerCitation({
+  await enregistrerCitation({
     joueur: t.joueur,
     clubSortantId: t.club_sortant_id,
     clubEntrantId: t.club_entrant_id,
@@ -52,5 +53,5 @@ curationRouter.patch('/transferts/:id/statut', (req, res) => {
     lienSource: lienSource ?? null,
   });
 
-  res.json(buildDetail(getTransfert(id)!));
-});
+  res.json(await buildDetail((await getTransfert(id))!));
+}));
