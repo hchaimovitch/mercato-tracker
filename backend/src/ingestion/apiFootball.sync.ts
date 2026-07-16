@@ -4,7 +4,7 @@ import { getClubByApiFootballId, listerClubsBig5, resoudreOuCreerClubExterne, up
 import { getEtat, getEtatJson, setEtat, setEtatJson } from '../repo/syncState.repo.js';
 import { enregistrerCitation } from './matching.js';
 import { appelsRestants, enregistrerAppel, peutAppeler } from './quota.js';
-import { getTeams, getTransfersForTeam, saisonCourante } from './apiFootball.client.js';
+import { getTeams, getTransfersForTeam, SAISON_DECOUVERTE_EQUIPES } from './apiFootball.client.js';
 import type { LeagueId } from '../types.js';
 
 const PROVIDER = 'api_football';
@@ -28,17 +28,12 @@ export async function synchroniserEquipes(): Promise<void> {
       return;
     }
     try {
-      let saison = saisonCourante();
-      let equipes = await getTeams(league.api_football_id, saison);
+      // Saison figée (2022-2024, seule plage autorisée par le plan gratuit) —
+      // sert uniquement à découvrir les identifiants de clubs, qui restent
+      // valables tels quels pour /transfers (non restreint par saison).
+      const saison = SAISON_DECOUVERTE_EQUIPES;
+      const equipes = await getTeams(league.api_football_id, saison);
       await enregistrerAppel(PROVIDER);
-      // Les effectifs de la saison à venir ne sont souvent publiés par API-Football
-      // qu'à l'approche de son coup d'envoi (ex: pas encore là mi-juillet pour la
-      // saison qui démarre en août) — on retombe sur la saison précédente si vide.
-      if (equipes.length === 0 && (await peutAppeler(PROVIDER, PLAFOND_JOURNALIER))) {
-        saison -= 1;
-        equipes = await getTeams(league.api_football_id, saison);
-        await enregistrerAppel(PROVIDER);
-      }
       for (const e of equipes) await upsertClubFromApiFootball(e.team.name, league.id as LeagueId, e.team.id);
       await setEtat(cle, new Date().toISOString());
       console.log(`[api-football] ${equipes.length} clubs synchronisés pour ${league.id} (saison ${saison})`);

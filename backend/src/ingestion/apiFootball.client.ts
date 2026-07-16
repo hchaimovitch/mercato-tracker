@@ -70,8 +70,10 @@ export function getTransfersForTeam(teamApiId: number): Promise<ApiFootballPlaye
   return apiFootballGet<ApiFootballPlayerTransfers[]>('/transfers', { team: teamApiId });
 }
 
-/** Heuristique standard "saison = année de début" (juillet→juin) — à ajuster si l'API renvoie un mismatch. */
-export function saisonCourante(date = new Date()): number {
-  const mois = date.getUTCMonth() + 1;
-  return mois >= 7 ? date.getUTCFullYear() : date.getUTCFullYear() - 1;
-}
+// Le plan gratuit d'API-Football restreint les endpoints par saison (dont /teams)
+// aux saisons 2022 à 2024 (cf. erreur "Free plans do not have access to this
+// season, try from 2022 to 2024."). Les identifiants de clubs qu'on y récupère
+// sont des identifiants stables, réutilisables ensuite avec /transfers (qui, lui,
+// n'est pas restreint par saison) — donc découvrir les clubs via une saison
+// historique autorisée ne pose aucun problème d'actualité des données.
+export const SAISON_DECOUVERTE_EQUIPES = 2023;
