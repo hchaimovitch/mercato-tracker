@@ -88,33 +88,43 @@ export async function synchroniserTransfertsOfficiels(): Promise<void> {
 
     for (const joueurTransferts of transferts) {
       for (const t of joueurTransferts.transfers) {
-        if (!t.teams.in || !t.teams.out) continue;
-        const fenetre = await fenetrePourDate(t.date);
-        if (!fenetre) continue; // hors des fenêtres suivies
+        try {
+          if (!t.teams.in || !t.teams.out) continue;
+          const fenetre = await fenetrePourDate(t.date);
+          if (!fenetre) continue; // hors des fenêtres suivies
 
-        const estEntrant = t.teams.in.id === club.api_football_id;
-        const estSortant = t.teams.out.id === club.api_football_id;
-        if (!estEntrant && !estSortant) continue;
+          const estEntrant = t.teams.in.id === club.api_football_id;
+          const estSortant = t.teams.out.id === club.api_football_id;
+          if (!estEntrant && !estSortant) continue;
 
-        const autreCote = estEntrant ? t.teams.out : t.teams.in;
-        const autreClub = (await getClubByApiFootballId(autreCote.id)) ?? (await resoudreOuCreerClubExterne(autreCote.id, autreCote.name));
+          const autreCote = estEntrant ? t.teams.out : t.teams.in;
+          // Certains mouvements (agent libre, retraite, club hors couverture) ont
+          // un id/name à null côté API — on ne peut alors pas identifier l'autre
+          // club de façon fiable, donc on ignore plutôt que d'inventer une donnée.
+          if (autreCote.id == null || !autreCote.name) continue;
+          const autreClub = (await getClubByApiFootballId(autreCote.id)) ?? (await resoudreOuCreerClubExterne(autreCote.id, autreCote.name));
 
-        const clubEntrantId = estEntrant ? club.id : autreClub.id;
-        const clubSortantId = estEntrant ? autreClub.id : club.id;
+          const clubEntrantId = estEntrant ? club.id : autreClub.id;
+          const clubSortantId = estEntrant ? autreClub.id : club.id;
 
-        await enregistrerCitation({
-          joueur: joueurTransferts.player.name,
-          clubSortantId,
-          clubEntrantId,
-          championnatId: club.championnat_id as LeagueId,
-          fenetreId: fenetre.id,
-          statutPropose: 'officiel',
-          montant: t.type,
-          date: t.date,
-          sourceNom: 'API-Football (confirmation officielle)',
-          sourceCategorie: 'club_officiel',
-          origine: 'automatique_api',
-        });
+          await enregistrerCitation({
+            joueur: joueurTransferts.player.name,
+            clubSortantId,
+            clubEntrantId,
+            championnatId: club.championnat_id as LeagueId,
+            fenetreId: fenetre.id,
+            statutPropose: 'officiel',
+            montant: t.type,
+            date: t.date,
+            sourceNom: 'API-Football (confirmation officielle)',
+            sourceCategorie: 'club_officiel',
+            origine: 'automatique_api',
+          });
+        } catch (err) {
+          // Un enregistrement individuel malformé ne doit pas interrompre la
+          // synchronisation des autres transferts/clubs du lot.
+          console.error(`[api-football] échec traitement d'un transfert (club ${club.nom}, joueur ${joueurTransferts.player.name}) :`, err);
+        }
       }
     }
   }

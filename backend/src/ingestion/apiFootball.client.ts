@@ -56,8 +56,11 @@ export interface ApiFootballTransferEntry {
   date: string;
   type: string | null;
   teams: {
-    in: { id: number; name: string } | null;
-    out: { id: number; name: string } | null;
+    // L'API renvoie parfois un objet avec id/name à null (agent libre, retraite,
+    // club hors couverture) plutôt que d'omettre le champ — donc id/name restent
+    // nullable même quand l'objet lui-même est présent.
+    in: { id: number | null; name: string | null } | null;
+    out: { id: number | null; name: string | null } | null;
   };
 }
 
