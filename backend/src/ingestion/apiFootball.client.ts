@@ -45,7 +45,7 @@ async function apiFootballGet<T>(path: string, params: Record<string, string | n
 }
 
 export interface ApiFootballTeam {
-  team: { id: number; name: string };
+  team: { id: number; name: string; logo?: string | null };
 }
 
 export function getTeams(leagueApiId: number, season: number): Promise<ApiFootballTeam[]> {

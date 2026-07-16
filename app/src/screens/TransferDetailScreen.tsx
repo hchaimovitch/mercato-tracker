@@ -155,7 +155,7 @@ function DetailBody({ t, navigation, backLabel }: { t: TransferDetail; navigatio
             <View style={[styles.faceCard, { marginTop: 9 }]}>
               <Text style={styles.faceCardLabel}>CLUB SORTANT</Text>
               <View style={styles.faceCardHeader}>
-                <ClubBadge abbr={t.from.abbr} color={t.from.color} size={38} radius={10} />
+                <ClubBadge abbr={t.from.abbr} color={t.from.color} logoUrl={t.from.logoUrl} size={38} radius={10} />
                 <View style={{ minWidth: 0, flexShrink: 1 }}>
                   <Text style={styles.faceCardName} numberOfLines={1}>{t.from.name}</Text>
                   <Text style={styles.faceCardSub} numberOfLines={1}>{t.fromLeagueName}</Text>
@@ -170,7 +170,7 @@ function DetailBody({ t, navigation, backLabel }: { t: TransferDetail; navigatio
             <View style={[styles.faceCard, styles.faceCardEntrant, { marginTop: 9 }]}>
               <Text style={[styles.faceCardLabel, { color: colors.amberLight }]}>CLUB ENTRANT</Text>
               <View style={styles.faceCardHeader}>
-                <ClubBadge abbr={t.to.abbr} color={t.to.color} size={38} radius={10} />
+                <ClubBadge abbr={t.to.abbr} color={t.to.color} logoUrl={t.to.logoUrl} size={38} radius={10} />
                 <View style={{ minWidth: 0, flexShrink: 1 }}>
                   <Text style={styles.faceCardName} numberOfLines={1}>{t.to.name}</Text>
                   <Text style={styles.faceCardSub} numberOfLines={1}>{t.toLeagueName}</Text>

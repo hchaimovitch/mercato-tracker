@@ -22,6 +22,7 @@ export interface ClubRow {
   abbr: string;
   api_football_id: number | null;
   sportmonks_id: number | null;
+  logo_url: string | null;
 }
 
 export interface FenetreRow {

@@ -2,6 +2,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useLeagueView, useWindows } from '../api/hooks';
 import { BackButton } from '../components/BackButton';
+import { ClubBadge } from '../components/ClubBadge';
 import { EmptyState } from '../components/EmptyState';
 import { HeaderGradient } from '../components/HeaderGradient';
 import { ErrorView, LoadingView } from '../components/ScreenState';
@@ -69,9 +70,7 @@ export function LeagueClubsScreen({ route, navigation }: Props) {
             onPress={() => navigation.navigate('ClubDetail', { clubId: item.id })}
             accessibilityRole="button"
           >
-            <View style={[styles.clubBadge, { backgroundColor: item.color }]}>
-              <Text style={styles.clubBadgeText}>{item.abbr}</Text>
-            </View>
+            <ClubBadge abbr={item.abbr} color={item.color} logoUrl={item.logoUrl} size={42} radius={11} />
             <View style={styles.rowBody}>
               <Text style={styles.rowName}>{item.name}</Text>
               <View style={styles.rowMetaRow}>
@@ -113,8 +112,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.bgCard, borderWidth: 1, borderColor: colors.border, borderRadius: 15,
     padding: 12, flexDirection: 'row', alignItems: 'center', gap: 11,
   },
-  clubBadge: { width: 42, height: 42, borderRadius: 11, alignItems: 'center', justifyContent: 'center' },
-  clubBadgeText: { fontFamily: manrope(800), fontSize: 12, color: colors.textPrimary },
   rowBody: { flex: 1, minWidth: 0 },
   rowName: { fontFamily: manrope(800), fontSize: 15, color: colors.textPrimary },
   rowMetaRow: { flexDirection: 'row', gap: 9, marginTop: 3 },

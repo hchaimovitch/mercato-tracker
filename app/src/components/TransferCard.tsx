@@ -41,7 +41,7 @@ export function TransferCard({ transfer: t, onPress }: TransferCardProps) {
 
       <View style={styles.faceRow}>
         <View style={styles.faceSide}>
-          <ClubBadge abbr={t.from.abbr} color={t.from.color} />
+          <ClubBadge abbr={t.from.abbr} color={t.from.color} logoUrl={t.from.logoUrl} />
           <View style={styles.faceSideText}>
             <Text style={styles.faceLabel}>SORTANT</Text>
             <Text style={styles.faceName} numberOfLines={1}>{t.from.name}</Text>
@@ -53,7 +53,7 @@ export function TransferCard({ transfer: t, onPress }: TransferCardProps) {
             <Text style={styles.faceLabel}>ENTRANT</Text>
             <Text style={styles.faceName} numberOfLines={1}>{t.to.name}</Text>
           </View>
-          <ClubBadge abbr={t.to.abbr} color={t.to.color} />
+          <ClubBadge abbr={t.to.abbr} color={t.to.color} logoUrl={t.to.logoUrl} />
         </View>
       </View>
 

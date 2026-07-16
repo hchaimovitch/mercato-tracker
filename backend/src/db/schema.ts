@@ -22,7 +22,8 @@ CREATE TABLE IF NOT EXISTS clubs (
   couleur TEXT NOT NULL,
   abbr TEXT NOT NULL,
   api_football_id INTEGER UNIQUE,
-  sportmonks_id INTEGER UNIQUE
+  sportmonks_id INTEGER UNIQUE,
+  logo_url TEXT
 );
 
 CREATE TABLE IF NOT EXISTS fenetres (

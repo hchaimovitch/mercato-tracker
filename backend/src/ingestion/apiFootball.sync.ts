@@ -34,7 +34,7 @@ export async function synchroniserEquipes(): Promise<void> {
       const saison = SAISON_DECOUVERTE_EQUIPES;
       const equipes = await getTeams(league.api_football_id, saison);
       await enregistrerAppel(PROVIDER);
-      for (const e of equipes) await upsertClubFromApiFootball(e.team.name, league.id as LeagueId, e.team.id);
+      for (const e of equipes) await upsertClubFromApiFootball(e.team.name, league.id as LeagueId, e.team.id, e.team.logo ?? null);
       await setEtat(cle, new Date().toISOString());
       console.log(`[api-football] ${equipes.length} clubs synchronisés pour ${league.id} (saison ${saison})`);
     } catch (err) {

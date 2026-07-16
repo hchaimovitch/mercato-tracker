@@ -15,11 +15,12 @@ export interface ClubRefDTO {
   name: string;
   abbr: string;
   color: string;
+  logoUrl: string | null;
 }
 
 function clubRef(row: ClubRow | undefined): ClubRefDTO {
-  if (!row) return { id: 0, name: 'Inconnu', abbr: '?', color: '#555555' };
-  return { id: row.id, name: row.nom, abbr: row.abbr, color: row.couleur };
+  if (!row) return { id: 0, name: 'Inconnu', abbr: '?', color: '#555555', logoUrl: null };
+  return { id: row.id, name: row.nom, abbr: row.abbr, color: row.couleur, logoUrl: row.logo_url };
 }
 
 export interface TransferCardDTO {

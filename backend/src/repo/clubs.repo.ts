@@ -9,6 +9,7 @@ function toClubRow(r: any): ClubRow {
     id: Number(r.id), nom: r.nom, championnat_id: r.championnat_id, couleur: r.couleur, abbr: r.abbr,
     api_football_id: r.api_football_id === null ? null : Number(r.api_football_id),
     sportmonks_id: r.sportmonks_id === null ? null : Number(r.sportmonks_id),
+    logo_url: r.logo_url ?? null,
   };
 }
 
@@ -32,22 +33,34 @@ export async function listerClubsBig5(): Promise<ClubRow[]> {
   return rs.rows.map(toClubRow);
 }
 
-/** Couleur d'affichage assignée déterministiquement (pas de vrai logo — badge initiales, cf. décision produit). */
+/**
+ * Couleur d'affichage assignée déterministiquement — sert de fallback pour le
+ * badge à initiales quand aucun logo n'est disponible (usage strictement
+ * personnel, jamais publié/distribué — voir README pour le contexte de cette
+ * décision sur les logos de clubs).
+ */
 const PALETTE = ['#b0392b', '#3a4550', '#6a8ac0', '#2f8a9a', '#2a3a6a', '#2f7fb0', '#4a6a8a', '#b03535', '#8a3a3a', '#c9a227', '#a03030', '#c04a4a', '#a0402f', '#8a4a4a', '#4d4d4d', '#3a6a4a', '#b03030'];
 
-export async function upsertClubFromApiFootball(nom: string, championnatId: string, apiFootballId: number): Promise<ClubRow> {
+export async function upsertClubFromApiFootball(nom: string, championnatId: string, apiFootballId: number, logoUrl: string | null = null): Promise<ClubRow> {
   const existing = await getClubByApiFootballId(apiFootballId);
-  if (existing) return existing;
+  if (existing) {
+    // Rattrape le logo pour les clubs déjà synchronisés avant l'ajout de ce champ.
+    if (logoUrl && existing.logo_url !== logoUrl) {
+      await db.execute({ sql: 'UPDATE clubs SET logo_url = @logo_url WHERE id = @id', args: { logo_url: logoUrl, id: existing.id } });
+      return { ...existing, logo_url: logoUrl };
+    }
+    return existing;
+  }
   const abbr = nom.split(/\s+/).map((w) => w[0]).join('').slice(0, 3).toUpperCase();
   const couleur = PALETTE[apiFootballId % PALETTE.length];
   await db.execute({
-    sql: 'INSERT INTO clubs (nom, championnat_id, couleur, abbr, api_football_id) VALUES (@nom, @championnat_id, @couleur, @abbr, @api_football_id)',
-    args: { nom, championnat_id: championnatId, couleur, abbr, api_football_id: apiFootballId },
+    sql: 'INSERT INTO clubs (nom, championnat_id, couleur, abbr, api_football_id, logo_url) VALUES (@nom, @championnat_id, @couleur, @abbr, @api_football_id, @logo_url)',
+    args: { nom, championnat_id: championnatId, couleur, abbr, api_football_id: apiFootballId, logo_url: logoUrl },
   });
   return (await getClubByApiFootballId(apiFootballId))!;
 }
 
-/** Résout (ou crée à la volée) le club de l'autre bout d'un transfert transfrontalier, hors Big 5. */
+/** Résout (ou crée à la volée) le club de l'autre bout d'un transfert transfrontalier, hors Big 5 — pas de logo disponible via /transfers. */
 export async function resoudreOuCreerClubExterne(apiFootballId: number, nom: string): Promise<ClubRow> {
   return upsertClubFromApiFootball(nom, LIGUE_EXTERNE, apiFootballId);
 }

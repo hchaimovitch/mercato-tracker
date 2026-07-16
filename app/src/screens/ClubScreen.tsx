@@ -3,6 +3,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useClubView, useWindows } from '../api/hooks';
 import type { ClubMovement } from '../api/types';
 import { BackButton } from '../components/BackButton';
+import { ClubBadge } from '../components/ClubBadge';
 import { HeaderGradient } from '../components/HeaderGradient';
 import { ErrorView, LoadingView } from '../components/ScreenState';
 import { SignalBadge } from '../components/SignalBadge';
@@ -17,9 +18,7 @@ function MovementRow({ m, accent, preposition, onPress }: { m: ClubMovement; acc
   return (
     <Pressable onPress={onPress} style={styles.movementRow} accessibilityRole="button">
       <View style={[styles.movementBar, { backgroundColor: accent }]} />
-      <View style={[styles.movementBadge, { backgroundColor: m.autreCouleur }]}>
-        <Text style={styles.movementBadgeText}>{m.autreAbbr}</Text>
-      </View>
+      <ClubBadge abbr={m.autreAbbr} color={m.autreCouleur} logoUrl={m.autreLogoUrl} size={34} radius={9} />
       <View style={styles.movementBody}>
         <Text style={styles.movementPlayer} numberOfLines={1}>{m.joueur}</Text>
         <Text style={styles.movementMeta} numberOfLines={1}>{preposition} {m.autreNom}</Text>
@@ -50,9 +49,7 @@ export function ClubScreen({ route, navigation }: Props) {
       <HeaderGradient strong style={styles.header}>
         <View style={styles.titleRow}>
           <BackButton onPress={() => navigation.goBack()} />
-          <View style={[styles.badge, { backgroundColor: club.color }]}>
-            <Text style={styles.badgeText}>{club.abbr}</Text>
-          </View>
+          <ClubBadge abbr={club.abbr} color={club.color} logoUrl={club.logoUrl} size={48} radius={13} />
           <View style={styles.titleTextWrap}>
             <Text style={styles.title}>{club.name}</Text>
             <Text style={styles.subtitle}>{club.leagueName} · {activeWindow?.full ?? ''}</Text>
@@ -118,8 +115,6 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.bgApp },
   header: { paddingTop: 52, paddingHorizontal: 16, paddingBottom: 15 },
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: 11 },
-  badge: { width: 48, height: 48, borderRadius: 13, alignItems: 'center', justifyContent: 'center' },
-  badgeText: { fontFamily: manrope(800), fontSize: 14, color: colors.textPrimary },
   titleTextWrap: { minWidth: 0, flexShrink: 1 },
   title: { fontFamily: manrope(800), fontSize: 21, letterSpacing: -0.4, color: colors.textPrimary, lineHeight: 23 },
   subtitle: { fontFamily: manrope(600), fontSize: 11, color: colors.textFaint },
@@ -140,8 +135,6 @@ const styles = StyleSheet.create({
     borderRadius: 13, padding: 11, paddingLeft: 14, overflow: 'hidden',
   },
   movementBar: { position: 'absolute', left: 0, top: 0, bottom: 0, width: 3 },
-  movementBadge: { width: 34, height: 34, borderRadius: 9, alignItems: 'center', justifyContent: 'center' },
-  movementBadgeText: { fontFamily: manrope(800), fontSize: 10, color: colors.textPrimary },
   movementBody: { flex: 1, minWidth: 0 },
   movementPlayer: { fontFamily: manrope(800), fontSize: 14, color: colors.textPrimary },
   movementMeta: { fontFamily: manrope(600), fontSize: 11, color: colors.textFaint },

@@ -29,10 +29,25 @@ const FENETRES_REF = [
 
 let initialized = false;
 
+/**
+ * `CREATE TABLE IF NOT EXISTS` n'ajoute pas de colonne à une table déjà
+ * existante (ex: la base Turso de prod, déjà peuplée avant l'ajout de
+ * `clubs.logo_url`) — on complète donc au démarrage via `ALTER TABLE`,
+ * idempotent (vérifié via PRAGMA avant d'altérer).
+ */
+async function migrerColonnesManquantes(): Promise<void> {
+  const info = await db.execute('PRAGMA table_info(clubs)');
+  const aLogoUrl = info.rows.some((r: any) => r.name === 'logo_url');
+  if (!aLogoUrl) {
+    await db.execute('ALTER TABLE clubs ADD COLUMN logo_url TEXT');
+  }
+}
+
 /** Crée le schéma et le référentiel (championnats/fenêtres) au premier démarrage — idempotent. */
 export async function initDb(): Promise<void> {
   if (initialized) return;
   await db.executeMultiple(SCHEMA_SQL);
+  await migrerColonnesManquantes();
 
   for (const l of LEAGUES_REF) {
     await db.execute({

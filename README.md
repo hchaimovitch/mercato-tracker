@@ -106,6 +106,6 @@ Le build tourne dans le cloud (~10-15 min) et fournit un lien de téléchargemen
 
 ## Notes
 
-- Badges de club = initiales colorées, pas de vrais logos (droits d'auteur).
+- Badges de club = logo officiel (fourni par API-Football, champ `logo` de `/teams`) quand disponible, sinon repli sur des initiales colorées (clubs hors Big 5 découverts via `/transfers`, qui ne renvoie pas de logo). **Ce choix n'est justifié que pour un usage strictement personnel, jamais publié/distribué** (usage nominatif de marques déposées, toléré en pratique pour un projet perso non commercial mais pas pour une app distribuée ou publiée sur un store) — si ce projet devait un jour être partagé publiquement, revenir aux initiales.
 - "Suivis" (transferts suivis) stocké localement sur l'appareil (AsyncStorage) — pas de compte utilisateur.
 - Le schéma de données complet (`Transfert`/`Source`/`historique_statut`, 7 statuts) est implémenté tel que spécifié ; seule l'**alimentation automatique** est volontairement réduite aux statuts que des sources réelles permettent d'établir (voir audit ci-dessus).

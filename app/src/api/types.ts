@@ -24,6 +24,7 @@ export interface ClubRef {
   name: string;
   abbr: string;
   color: string;
+  logoUrl: string | null;
 }
 
 export interface Tier {
@@ -116,6 +117,7 @@ export interface ClubActivityRow {
   abbr: string;
   name: string;
   color: string;
+  logoUrl: string | null;
   arr: number;
   dep: number;
   netStr: string;
@@ -140,6 +142,7 @@ export interface ClubMovement {
   autreNom: string;
   autreAbbr: string;
   autreCouleur: string;
+  autreLogoUrl: string | null;
   fee: string | null;
   tier: Tier;
 }
@@ -149,6 +152,7 @@ export interface ClubView {
   abbr: string;
   name: string;
   color: string;
+  logoUrl: string | null;
   leagueName: string;
   inStr: string;
   outStr: string;

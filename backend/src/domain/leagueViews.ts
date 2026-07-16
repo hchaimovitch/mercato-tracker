@@ -48,6 +48,7 @@ export interface ClubActivityRowDTO {
   abbr: string;
   name: string;
   color: string;
+  logoUrl: string | null;
   arr: number;
   dep: number;
   netStr: string;
@@ -79,7 +80,7 @@ export async function leagueView(leagueId: LeagueId, fenetreId: string): Promise
       const moneyOut = departures.reduce((s, t) => s + parseFee(t.montant ?? ''), 0);
       const net = moneyOut - moneyIn;
       return {
-        id: c.id, abbr: c.abbr, name: c.nom, color: c.couleur,
+        id: c.id, abbr: c.abbr, name: c.nom, color: c.couleur, logoUrl: c.logo_url,
         arr: arrivals.length, dep: departures.length,
         netStr: fmtNet(net), netColor: net >= 0 ? '#4cc38a' : '#e08a6f',
       } satisfies ClubActivityRowDTO;
@@ -105,6 +106,7 @@ export interface ClubMovementDTO {
   autreNom: string;
   autreAbbr: string;
   autreCouleur: string;
+  autreLogoUrl: string | null;
   fee: string | null;
   tier: Awaited<ReturnType<typeof toCard>>['tier'];
 }
@@ -114,6 +116,7 @@ export interface ClubViewDTO {
   abbr: string;
   name: string;
   color: string;
+  logoUrl: string | null;
   leagueName: string;
   inStr: string;
   outStr: string;
@@ -144,6 +147,7 @@ export async function clubView(clubId: number, fenetreId: string): Promise<ClubV
     return {
       transfertId: t.id, joueur: t.joueur,
       autreNom: autre?.nom ?? 'Inconnu', autreAbbr: autre?.abbr ?? '?', autreCouleur: autre?.couleur ?? '#555',
+      autreLogoUrl: autre?.logo_url ?? null,
       fee: t.montant, tier: card.tier,
     };
   };
@@ -155,7 +159,7 @@ export async function clubView(clubId: number, fenetreId: string): Promise<ClubV
   const net = moneyOut - moneyIn;
 
   return {
-    id: club.id, abbr: club.abbr, name: club.nom, color: club.couleur,
+    id: club.id, abbr: club.abbr, name: club.nom, color: club.couleur, logoUrl: club.logo_url,
     leagueName: league?.nom ?? '—',
     inStr: fmtMoney(moneyIn), outStr: fmtMoney(moneyOut),
     netStr: fmtNet(net), netColor: net >= 0 ? '#4cc38a' : '#e08a6f',
