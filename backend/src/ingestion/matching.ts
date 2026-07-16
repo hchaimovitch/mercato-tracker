@@ -41,27 +41,39 @@ export interface CitationEntrante {
 export async function enregistrerCitation(c: CitationEntrante): Promise<number> {
   const cle = cleCorrespondance(c.joueur, c.clubSortantId, c.clubEntrantId, c.fenetreId);
   let transfert = await findTransfertByCle(cle);
+  const preexistant = !!transfert;
 
   if (!transfert) {
+    // Statut initial toujours neutre, même si la citation propose d'emblée
+    // officiel/annulé : ça garantit que la résolution passe par le pipeline
+    // normal (resoudreTransfert) plutôt que de créer un transfert déjà "résolu"
+    // sans jamais avoir traversé le calcul de score / mise à jour des sources.
+    const statutInitial: Statut = c.statutPropose === 'officiel' || c.statutPropose === 'annule' ? 'rumeur' : c.statutPropose;
     transfert = await insererTransfert({
       joueur: c.joueur,
       clubSortantId: c.clubSortantId,
       clubEntrantId: c.clubEntrantId,
       championnatId: c.championnatId,
       fenetreId: c.fenetreId,
-      statut: c.statutPropose,
+      statut: statutInitial,
       scoreFiabilite: null,
       montant: c.montant,
-      dateTransfert: c.statutPropose === 'officiel' ? c.date : null,
+      dateTransfert: null,
       cleCorrespondance: cle,
     });
   }
 
-  if (transfert.statut === 'officiel' || transfert.statut === 'annule') {
-    return transfert.id; // déjà résolu — une nouvelle rumeur tardive ne rouvre rien
+  if (preexistant && (transfert.statut === 'officiel' || transfert.statut === 'annule')) {
+    return transfert.id; // déjà résolu — une nouvelle citation tardive ne rouvre rien
   }
 
   const source = await upsertSource(c.sourceNom, c.sourceCategorie);
+
+  if (c.statutPropose === 'officiel' || c.statutPropose === 'annule') {
+    await resoudreTransfert({ transfertId: transfert.id, resolution: c.statutPropose, date: c.date, sourceId: source.id, origine: c.origine, lienSource: c.lienSource });
+    return transfert.id;
+  }
+
   const estPrimaire = (await historiquePourTransfert(transfert.id)).length === 0;
   await ajouterHistorique({
     transfertId: transfert.id,
@@ -73,20 +85,15 @@ export async function enregistrerCitation(c: CitationEntrante): Promise<number> 
     lienSource: c.lienSource,
   });
 
-  if (c.statutPropose === 'officiel' || c.statutPropose === 'annule') {
-    await resoudreTransfert({ transfertId: transfert.id, resolution: c.statutPropose, date: c.date, sourceId: source.id, origine: c.origine, lienSource: c.lienSource });
-  } else {
-    // Ne fait avancer le statut affiché que si la nouvelle citation est plus avancée que l'actuel.
-    const actuel = (await getTransfert(transfert.id))!;
-    if (actuel.statut !== 'officiel' && actuel.statut !== 'annule') {
-      const stepActuel = STATUT_STEP[actuel.statut];
-      const stepPropose = STATUT_STEP[c.statutPropose as Exclude<Statut, 'annule'>];
-      if (stepPropose > stepActuel) {
-        await mettreAJourStatut(transfert.id, c.statutPropose, actuel.score_fiabilite);
-      }
-    }
-    await recalculerScoreTransfert(transfert.id);
+  // Ne fait avancer le statut affiché que si la nouvelle citation est plus avancée que l'actuel
+  // (le transfert vient d'être créé ou est encore en cours — jamais officiel/annulé ici).
+  const actuel = (await getTransfert(transfert.id))!;
+  const stepActuel = STATUT_STEP[actuel.statut as Exclude<Statut, 'annule'>];
+  const stepPropose = STATUT_STEP[c.statutPropose as Exclude<Statut, 'annule'>];
+  if (stepPropose > stepActuel) {
+    await mettreAJourStatut(transfert.id, c.statutPropose, actuel.score_fiabilite);
   }
+  await recalculerScoreTransfert(transfert.id);
 
   return transfert.id;
 }
