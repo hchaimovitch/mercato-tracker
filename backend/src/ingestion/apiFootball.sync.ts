@@ -27,11 +27,26 @@ export async function synchroniserEquipes(): Promise<void> {
       console.log(`[api-football] quota atteint, report du rafraîchissement des clubs pour ${league.id}`);
       return;
     }
-    const equipes = await getTeams(league.api_football_id, saisonCourante());
-    await enregistrerAppel(PROVIDER);
-    for (const e of equipes) await upsertClubFromApiFootball(e.team.name, league.id as LeagueId, e.team.id);
-    await setEtat(cle, new Date().toISOString());
-    console.log(`[api-football] ${equipes.length} clubs synchronisés pour ${league.id}`);
+    try {
+      let saison = saisonCourante();
+      let equipes = await getTeams(league.api_football_id, saison);
+      await enregistrerAppel(PROVIDER);
+      // Les effectifs de la saison à venir ne sont souvent publiés par API-Football
+      // qu'à l'approche de son coup d'envoi (ex: pas encore là mi-juillet pour la
+      // saison qui démarre en août) — on retombe sur la saison précédente si vide.
+      if (equipes.length === 0 && (await peutAppeler(PROVIDER, PLAFOND_JOURNALIER))) {
+        saison -= 1;
+        equipes = await getTeams(league.api_football_id, saison);
+        await enregistrerAppel(PROVIDER);
+      }
+      for (const e of equipes) await upsertClubFromApiFootball(e.team.name, league.id as LeagueId, e.team.id);
+      await setEtat(cle, new Date().toISOString());
+      console.log(`[api-football] ${equipes.length} clubs synchronisés pour ${league.id} (saison ${saison})`);
+    } catch (err) {
+      // Une ligue en échec (ex: clé invalide) ne doit pas bloquer les autres —
+      // pas de setEtat ici, donc cette ligue sera retentée au prochain passage.
+      console.error(`[api-football] échec sync clubs pour ${league.id} :`, err);
+    }
   }
 }
 

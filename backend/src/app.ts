@@ -2,6 +2,7 @@ import cors from 'cors';
 import express from 'express';
 import { clubsRouter } from './routes/clubs.js';
 import { curationRouter } from './routes/curation.js';
+import { debugRouter } from './routes/debug.js';
 import { leaguesRouter } from './routes/leagues.js';
 import { sourcesRouter } from './routes/sources.js';
 import { transfersRouter } from './routes/transfers.js';
@@ -20,6 +21,7 @@ export function createApp() {
   app.use('/transfers', transfersRouter);
   app.use('/sources', sourcesRouter);
   app.use('/curation', curationRouter);
+  app.use('/debug', debugRouter);
 
   return app;
 }

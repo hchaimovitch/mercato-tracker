@@ -20,6 +20,14 @@ function baseUrlAndHeaders(): { base: string; headers: Record<string, string> } 
   return { base: `https://${DIRECT_HOST}`, headers: { 'x-apisports-key': key } };
 }
 
+/** Vrai si non vide, que la forme soit un tableau (v3) ou un objet de messages par champ. */
+function aDesErreurs(errors: unknown): boolean {
+  if (!errors) return false;
+  if (Array.isArray(errors)) return errors.length > 0;
+  if (typeof errors === 'object') return Object.keys(errors).length > 0;
+  return false;
+}
+
 async function apiFootballGet<T>(path: string, params: Record<string, string | number>): Promise<T> {
   const { base, headers } = baseUrlAndHeaders();
   const url = new URL(base + path);
@@ -27,6 +35,12 @@ async function apiFootballGet<T>(path: string, params: Record<string, string | n
   const res = await fetch(url.toString(), { headers });
   if (!res.ok) throw new Error(`API-Football ${path} → HTTP ${res.status}`);
   const json = (await res.json()) as { response: T; errors?: unknown };
+  // L'API répond souvent HTTP 200 même en cas de clé invalide/quota dépassé, avec
+  // le vrai problème caché dans `errors` — sans cette vérification, une erreur
+  // d'authentification ressemble silencieusement à "aucun résultat".
+  if (aDesErreurs(json.errors)) {
+    throw new Error(`API-Football ${path} → ${JSON.stringify(json.errors)}`);
+  }
   return json.response;
 }
 
