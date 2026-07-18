@@ -64,8 +64,17 @@ export async function mettreAJourScore(id: number, scoreFiabilite: number | null
   });
 }
 
+/**
+ * "Sans montant chiffré" — pas juste `montant IS NULL` : la sync API-Football
+ * remplit ce champ avec le *type* de mouvement ("Transfer", "Loan", "N/A"…),
+ * jamais NULL en pratique (voir apiFootball.sync.ts). Un placeholder de ce
+ * genre ne contient aucun chiffre, contrairement à un vrai montant ("€30M")
+ * ou à "Libre" — mais "Libre" n'en contient pas non plus, donc un transfert
+ * déjà confirmé libre sera réexaminé au prochain passage : sans conséquence,
+ * juste un peu de travail refait.
+ */
 export async function listerTransfertsSansMontant(): Promise<TransfertRow[]> {
-  const rs = await db.execute("SELECT * FROM transferts WHERE montant IS NULL");
+  const rs = await db.execute("SELECT * FROM transferts WHERE montant IS NULL OR montant NOT GLOB '*[0-9]*'");
   return rs.rows.map(toTransfertRow);
 }
 
