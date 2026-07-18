@@ -11,7 +11,7 @@ App de suivi du mercato de football pour les 5 grands championnats européens (A
 ## Ce qui est réel, et ce qui ne l'est pas — résumé de l'audit
 
 **Réel et automatisé :**
-- Transferts officiels confirmés, via API-Football (gratuit, 100 req/jour — largement suffisant pour synchroniser les 5 championnats en tâche de fond).
+- Transferts officiels confirmés, via API-Football (gratuit, 100 req/jour — largement suffisant pour synchroniser les 5 championnats en tâche de fond). Le plan gratuit limite aussi à 10 req/min (pas seulement le quota journalier) — un passage sans pause entre les appels a dépassé ce plafond et fait suspendre le compte une fois ; les appels sont désormais espacés (`API_FOOTBALL_MIN_INTERVAL_MS`).
 - Fiabilité des sources : score de Wilson (borne basse à 95%) calculé sur l'historique **réellement accumulé par l'app** (confirmé/infirmé au fil des résolutions de transferts) — aucune donnée d'amorçage inventée. Une source neuve affiche "historique insuffisant", pas un pourcentage flatteur.
 - Score de fiabilité par transfert : moyenne pondérée (catégorie de source × primaire/relais) + bonus de corroboration, normalisée sur 100 — voir `backend/src/domain/reliability.ts`.
 - Pipeline de recalcul en cascade : la résolution d'un transfert (officiel/annulé) met à jour les compteurs des sources citées, puis recalcule le score des autres transferts en cours citant ces mêmes sources — voir `backend/src/domain/cascade.ts`.

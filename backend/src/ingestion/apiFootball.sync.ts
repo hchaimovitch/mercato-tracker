@@ -11,6 +11,14 @@ const PROVIDER = 'api_football';
 const PLAFOND_JOURNALIER = Number(process.env.API_FOOTBALL_DAILY_CAP || 90); // marge sous le quota gratuit de 100/jour
 const TAILLE_LOT_PAR_RUN = Number(process.env.API_FOOTBALL_BATCH_SIZE || 20);
 const EQUIPES_TTL_JOURS = 7;
+// Le plan gratuit limite aussi à 10 req/min (pas seulement 100/jour) — sans pause entre
+// les appels d'un même lot, ce plafond était dépassé, ce qui a mené à une suspension du
+// compte. Marge sous 6s (10/min) pour rester large.
+const DELAI_ENTRE_APPELS_MS = Number(process.env.API_FOOTBALL_MIN_INTERVAL_MS || 6500);
+
+function attendre(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 function joursDepuis(dateIso: string): number {
   return (Date.now() - new Date(dateIso).getTime()) / 86_400_000;
@@ -37,6 +45,7 @@ export async function synchroniserEquipes(): Promise<void> {
       for (const e of equipes) await upsertClubFromApiFootball(e.team.name, league.id as LeagueId, e.team.id, e.team.logo ?? null);
       await setEtat(cle, new Date().toISOString());
       console.log(`[api-football] ${equipes.length} clubs synchronisés pour ${league.id} (saison ${saison})`);
+      await attendre(DELAI_ENTRE_APPELS_MS);
     } catch (err) {
       // Une ligue en échec (ex: clé invalide) ne doit pas bloquer les autres —
       // pas de setEtat ici, donc cette ligue sera retentée au prochain passage.
@@ -83,8 +92,10 @@ export async function synchroniserTransfertsOfficiels(): Promise<void> {
       await enregistrerAppel(PROVIDER);
     } catch (err) {
       console.error(`[api-football] échec sync transferts club ${club.nom} :`, err);
+      await attendre(DELAI_ENTRE_APPELS_MS);
       continue;
     }
+    await attendre(DELAI_ENTRE_APPELS_MS);
 
     for (const joueurTransferts of transferts) {
       for (const t of joueurTransferts.transfers) {
