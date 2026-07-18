@@ -64,6 +64,18 @@ export async function mettreAJourScore(id: number, scoreFiabilite: number | null
   });
 }
 
+export async function listerTransfertsSansMontant(): Promise<TransfertRow[]> {
+  const rs = await db.execute("SELECT * FROM transferts WHERE montant IS NULL");
+  return rs.rows.map(toTransfertRow);
+}
+
+export async function mettreAJourMontant(id: number, montant: string): Promise<void> {
+  await db.execute({
+    sql: "UPDATE transferts SET montant=@montant, updated_at=datetime('now') WHERE id=@id",
+    args: { id, montant },
+  });
+}
+
 export async function listerParFenetre(fenetreId: string, championnatId?: LeagueId): Promise<TransfertRow[]> {
   const rs = championnatId
     ? await db.execute({ sql: 'SELECT * FROM transferts WHERE fenetre_id = @fenetre_id AND championnat_id = @championnat_id ORDER BY updated_at DESC', args: { fenetre_id: fenetreId, championnat_id: championnatId } })
