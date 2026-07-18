@@ -81,9 +81,15 @@ export async function synchroniserMontantsTransfermarkt(): Promise<void> {
   }
 
   let completes = 0;
+  let aucunJoueur = 0;
+  let aucunClub = 0;
+  let ambigu = 0;
   for (const t of sansMontant) {
     const candidats = parJoueur.get(normaliserTexte(t.joueur));
-    if (!candidats || candidats.length === 0) continue;
+    if (!candidats || candidats.length === 0) {
+      aucunJoueur++;
+      continue;
+    }
 
     const nomSortant = t.club_sortant_id ? (await getClub(t.club_sortant_id))?.nom : undefined;
     const nomEntrant = t.club_entrant_id ? (await getClub(t.club_entrant_id))?.nom : undefined;
@@ -95,11 +101,21 @@ export async function synchroniserMontantsTransfermarkt(): Promise<void> {
       const to = normaliserTexte(c.toClubName);
       return (cibleSortant && from === cibleSortant) || (cibleEntrant && to === cibleEntrant);
     });
-    if (correspondants.length !== 1) continue; // ambigu ou aucune correspondance de club — on ignore
+    if (correspondants.length === 0) {
+      aucunClub++;
+      continue;
+    }
+    if (correspondants.length > 1) {
+      ambigu++;
+      continue;
+    }
 
     await mettreAJourMontant(t.id, formatMontant(correspondants[0].transferFeeEur!));
     completes++;
   }
 
-  console.log(`[transfermarkt-dataset] ${completes}/${sansMontant.length} montants complétés`);
+  console.log(
+    `[transfermarkt-dataset] ${completes}/${sansMontant.length} montants complétés ` +
+    `(joueur introuvable dans le dataset : ${aucunJoueur}, club non reconnu : ${aucunClub}, ambigu : ${ambigu})`
+  );
 }
