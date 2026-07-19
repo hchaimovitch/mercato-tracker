@@ -53,13 +53,18 @@ async function telechargerLignes(): Promise<LigneTransfermarkt[]> {
   const csv = gunzipSync(gz).toString('utf-8');
   const lignes: Record<string, string>[] = parse(csv, { columns: true, skip_empty_lines: true });
 
+  // Garde aussi les lignes à montant inconnu (transfer_fee vide) : les exclure ici les
+  // rendait invisibles à la correspondance par joueur+club, alors qu'on doit pouvoir
+  // distinguer "transfert introuvable" de "transfert trouvé mais montant inconnu chez
+  // Transfermarkt aussi" (vérifié sur un échantillon en prod — des candidats plausibles
+  // disparaissaient silencieusement à cause de ce filtre).
   return lignes.map((l) => ({
     playerName: l.player_name,
     transferDate: l.transfer_date,
     fromClubName: l.from_club_name,
     toClubName: l.to_club_name,
     transferFeeEur: l.transfer_fee === '' || l.transfer_fee === undefined ? null : Number(l.transfer_fee),
-  })).filter((l) => l.playerName && l.transferFeeEur !== null);
+  })).filter((l) => l.playerName);
 }
 
 /**
@@ -97,6 +102,7 @@ export async function synchroniserMontantsTransfermarkt(): Promise<void> {
   let aucunJoueur = 0;
   let aucunClub = 0;
   let ambigu = 0;
+  let montantInconnuCoteSource = 0;
   const echantillonAucunJoueur: string[] = [];
   const echantillonAucunClub: { joueur: string; nosClubs: string; candidats: string }[] = [];
   for (const t of sansMontant) {
@@ -133,13 +139,20 @@ export async function synchroniserMontantsTransfermarkt(): Promise<void> {
       continue;
     }
 
-    await mettreAJourMontant(t.id, formatMontant(correspondants[0].transferFeeEur!));
+    const feeEur = correspondants[0].transferFeeEur;
+    if (feeEur === null) {
+      montantInconnuCoteSource++;
+      continue;
+    }
+
+    await mettreAJourMontant(t.id, formatMontant(feeEur));
     completes++;
   }
 
   console.log(
     `[transfermarkt-dataset] ${completes}/${sansMontant.length} montants complétés ` +
-    `(joueur introuvable dans le dataset : ${aucunJoueur}, club non reconnu : ${aucunClub}, ambigu : ${ambigu})`
+    `(joueur introuvable dans le dataset : ${aucunJoueur}, club non reconnu : ${aucunClub}, ambigu : ${ambigu}, ` +
+    `montant inconnu côté Transfermarkt aussi : ${montantInconnuCoteSource})`
   );
   if (echantillonAucunJoueur.length > 0) {
     console.log(`[transfermarkt-dataset] échantillon de joueurs introuvables : ${JSON.stringify(echantillonAucunJoueur)}`);
