@@ -29,6 +29,18 @@ function normaliserTexte(texte: string): string {
     .replace(/[^a-z0-9]/g, '');
 }
 
+/**
+ * Clé de correspondance joueur : le nom de famille seul, pas le nom complet.
+ * API-Football abrège systématiquement le prénom en initiale ("A. Cozier-Duberry"),
+ * alors que Transfermarkt utilise le prénom complet ("Archie Cozier-Duberry") — une
+ * comparaison sur le nom complet ne matchait quasiment jamais (vérifié sur un
+ * échantillon en prod). Le nom de famille est désambiguïsé par le club juste après.
+ */
+function cleJoueur(nomComplet: string): string {
+  const tokens = nomComplet.trim().split(/\s+/);
+  return normaliserTexte(tokens[tokens.length - 1]);
+}
+
 function formatMontant(feeEur: number): string {
   if (feeEur === 0) return 'Libre';
   return `€${(feeEur / 1_000_000).toFixed(1).replace(/\.0$/, '')}M`;
@@ -52,10 +64,11 @@ async function telechargerLignes(): Promise<LigneTransfermarkt[]> {
 
 /**
  * Complète le montant des transferts déjà enregistrés (via API-Football) qui n'en ont pas.
- * Correspondance par nom de joueur normalisé, désambiguïsée par le nom du club (dans un sens
- * ou l'autre) car Transfermarkt utilise son propre espace d'identifiants, sans lien avec ceux
- * d'API-Football. Comme pour la correspondance SportMonks : en cas de doute (plusieurs
- * candidats, aucun club qui corresponde), on ignore plutôt que de risquer un mauvais montant.
+ * Correspondance par nom de famille du joueur (voir cleJoueur), désambiguïsée par le nom du
+ * club (dans un sens ou l'autre) car Transfermarkt utilise son propre espace d'identifiants,
+ * sans lien avec ceux d'API-Football. Comme pour la correspondance SportMonks : en cas de
+ * doute (plusieurs candidats, aucun club qui corresponde), on ignore plutôt que de risquer un
+ * mauvais montant.
  */
 export async function synchroniserMontantsTransfermarkt(): Promise<void> {
   const sansMontant = await listerTransfertsSansMontant();
@@ -74,7 +87,7 @@ export async function synchroniserMontantsTransfermarkt(): Promise<void> {
 
   const parJoueur = new Map<string, LigneTransfermarkt[]>();
   for (const l of lignes) {
-    const cle = normaliserTexte(l.playerName);
+    const cle = cleJoueur(l.playerName);
     const groupe = parJoueur.get(cle);
     if (groupe) groupe.push(l);
     else parJoueur.set(cle, [l]);
@@ -86,7 +99,7 @@ export async function synchroniserMontantsTransfermarkt(): Promise<void> {
   let ambigu = 0;
   const echantillonAucunJoueur: string[] = [];
   for (const t of sansMontant) {
-    const candidats = parJoueur.get(normaliserTexte(t.joueur));
+    const candidats = parJoueur.get(cleJoueur(t.joueur));
     if (!candidats || candidats.length === 0) {
       aucunJoueur++;
       if (echantillonAucunJoueur.length < 15) echantillonAucunJoueur.push(t.joueur);
