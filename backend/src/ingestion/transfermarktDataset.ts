@@ -134,12 +134,19 @@ export async function synchroniserMontantsTransfermarkt(): Promise<void> {
       }
       continue;
     }
-    if (correspondants.length > 1) {
+
+    // Si plusieurs lignes matchent joueur+club, celles à montant connu priment sur les
+    // doublons/entrées incomplètes à montant inconnu — sinon on perdait des matches déjà
+    // uniques dès qu'une ligne dupliquée sans montant apparaissait pour le même transfert.
+    const avecMontantConnu = correspondants.filter((c) => c.transferFeeEur !== null);
+    const retenus = avecMontantConnu.length > 0 ? avecMontantConnu : correspondants;
+
+    if (retenus.length > 1) {
       ambigu++;
       continue;
     }
 
-    const feeEur = correspondants[0].transferFeeEur;
+    const feeEur = retenus[0].transferFeeEur;
     if (feeEur === null) {
       montantInconnuCoteSource++;
       continue;
