@@ -84,10 +84,12 @@ export async function synchroniserMontantsTransfermarkt(): Promise<void> {
   let aucunJoueur = 0;
   let aucunClub = 0;
   let ambigu = 0;
+  const echantillonAucunJoueur: string[] = [];
   for (const t of sansMontant) {
     const candidats = parJoueur.get(normaliserTexte(t.joueur));
     if (!candidats || candidats.length === 0) {
       aucunJoueur++;
+      if (echantillonAucunJoueur.length < 15) echantillonAucunJoueur.push(t.joueur);
       continue;
     }
 
@@ -118,4 +120,7 @@ export async function synchroniserMontantsTransfermarkt(): Promise<void> {
     `[transfermarkt-dataset] ${completes}/${sansMontant.length} montants complétés ` +
     `(joueur introuvable dans le dataset : ${aucunJoueur}, club non reconnu : ${aucunClub}, ambigu : ${ambigu})`
   );
+  if (echantillonAucunJoueur.length > 0) {
+    console.log(`[transfermarkt-dataset] échantillon de joueurs introuvables : ${JSON.stringify(echantillonAucunJoueur)}`);
+  }
 }
