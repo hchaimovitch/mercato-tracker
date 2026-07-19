@@ -98,6 +98,7 @@ export async function synchroniserMontantsTransfermarkt(): Promise<void> {
   let aucunClub = 0;
   let ambigu = 0;
   const echantillonAucunJoueur: string[] = [];
+  const echantillonAucunClub: { joueur: string; nosClubs: string; candidats: string }[] = [];
   for (const t of sansMontant) {
     const candidats = parJoueur.get(cleJoueur(t.joueur));
     if (!candidats || candidats.length === 0) {
@@ -118,6 +119,13 @@ export async function synchroniserMontantsTransfermarkt(): Promise<void> {
     });
     if (correspondants.length === 0) {
       aucunClub++;
+      if (echantillonAucunClub.length < 15) {
+        echantillonAucunClub.push({
+          joueur: t.joueur,
+          nosClubs: `${nomSortant ?? '?'} → ${nomEntrant ?? '?'}`,
+          candidats: candidats.map((c) => `${c.fromClubName} → ${c.toClubName}`).join(' | '),
+        });
+      }
       continue;
     }
     if (correspondants.length > 1) {
@@ -135,5 +143,8 @@ export async function synchroniserMontantsTransfermarkt(): Promise<void> {
   );
   if (echantillonAucunJoueur.length > 0) {
     console.log(`[transfermarkt-dataset] échantillon de joueurs introuvables : ${JSON.stringify(echantillonAucunJoueur)}`);
+  }
+  if (echantillonAucunClub.length > 0) {
+    console.log(`[transfermarkt-dataset] échantillon de clubs non reconnus : ${JSON.stringify(echantillonAucunClub)}`);
   }
 }
