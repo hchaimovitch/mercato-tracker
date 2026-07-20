@@ -23,12 +23,20 @@ const parser = new Parser({ timeout: 15_000 });
 
 export async function telechargerFlux(url: string): Promise<ArticleRss[]> {
   const flux = await parser.parseURL(url);
-  return (flux.items || [])
-    .filter((item) => item.title && item.link && item.pubDate)
-    .map((item) => ({
-      titre: item.title!,
+  const articles: ArticleRss[] = [];
+  for (const item of flux.items || []) {
+    if (!item.title || !item.link || !item.pubDate) continue;
+    // Un format de date non standard (observé sur Sky Sports) fait planter
+    // Date.toISOString() — on ignore cet article plutôt que de faire échouer
+    // le téléchargement de tout le flux pour un seul item malformé.
+    const date = new Date(item.pubDate);
+    if (Number.isNaN(date.getTime())) continue;
+    articles.push({
+      titre: item.title,
       extrait: item.contentSnippet || item.content || '',
-      lien: item.link!,
-      datePublication: new Date(item.pubDate!).toISOString(),
-    }));
+      lien: item.link,
+      datePublication: date.toISOString(),
+    });
+  }
+  return articles;
 }

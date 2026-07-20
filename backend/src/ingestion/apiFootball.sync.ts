@@ -84,26 +84,17 @@ export async function synchroniserTransfertsOfficiels(): Promise<void> {
   for (const clubId of lot) {
     const club = clubsParId.get(clubId);
     if (!club?.api_football_id) continue;
-
-    // Logs de diagnostic temporaires (blocage observé en prod dont le point exact
-    // n'est pas encore identifié : DB quota check ? appel /transfers malgré le
-    // timeout ajouté ? le sleep lui-même ?) — à retirer une fois la cause confirmée.
-    console.log(`[api-football] club ${club.nom} : vérification quota…`);
     if (!(await peutAppeler(PROVIDER, PLAFOND_JOURNALIER))) break;
 
-    console.log(`[api-football] club ${club.nom} : appel /transfers…`);
     let transferts;
     try {
       transferts = await getTransfersForTeam(club.api_football_id);
       await enregistrerAppel(PROVIDER);
     } catch (err) {
       console.error(`[api-football] échec sync transferts club ${club.nom} :`, err);
-      console.log(`[api-football] club ${club.nom} : pause après échec…`);
       await attendre(DELAI_ENTRE_APPELS_MS);
-      console.log(`[api-football] club ${club.nom} : pause terminée`);
       continue;
     }
-    console.log(`[api-football] club ${club.nom} : ${transferts.length} entrée(s) reçue(s), pause…`);
     await attendre(DELAI_ENTRE_APPELS_MS);
 
     for (const joueurTransferts of transferts) {
