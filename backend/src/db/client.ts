@@ -41,6 +41,14 @@ async function migrerColonnesManquantes(): Promise<void> {
   if (!aLogoUrl) {
     await db.execute('ALTER TABLE clubs ADD COLUMN logo_url TEXT');
   }
+
+  // Backfill ponctuel : les clubs hors Big 5 déjà en base (créés avant l'ajout de la
+  // construction d'URL de logo dans resoudreOuCreerClubExterne) n'auraient sinon leur
+  // logo qu'à la prochaine fois qu'ils réapparaissent dans un transfert.
+  await db.execute(
+    "UPDATE clubs SET logo_url = 'https://media.api-sports.io/football/teams/' || api_football_id || '.png' " +
+    "WHERE championnat_id = 'ext' AND logo_url IS NULL AND api_football_id IS NOT NULL"
+  );
 }
 
 /** Crée le schéma et le référentiel (championnats/fenêtres) au premier démarrage — idempotent. */

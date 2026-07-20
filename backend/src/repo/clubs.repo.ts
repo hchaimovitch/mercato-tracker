@@ -61,8 +61,18 @@ export async function upsertClubFromApiFootball(nom: string, championnatId: stri
 }
 
 /** Résout (ou crée à la volée) le club de l'autre bout d'un transfert transfrontalier, hors Big 5 — pas de logo disponible via /transfers. */
+/**
+ * L'autre club d'un transfert transfrontalier n'est jamais découvert via /teams (réservé
+ * au Big 5), donc jamais de champ `logo` fourni directement par l'API pour lui — mais
+ * API-Football documente une URL de logo prévisible, construite à partir du seul id
+ * d'équipe (https://www.api-football.com/documentation-v3), le même hôte CDN que celui
+ * déjà utilisé pour les clubs du Big 5. Couvre ainsi tout club hors Big 5 (Portugal,
+ * Turquie, Pays-Bas, Belgique, Suisse, Russie, D2 des 5 grands championnats, etc.) sans
+ * avoir à répertorier un par un les championnats concernés.
+ */
 export async function resoudreOuCreerClubExterne(apiFootballId: number, nom: string): Promise<ClubRow> {
-  return upsertClubFromApiFootball(nom, LIGUE_EXTERNE, apiFootballId);
+  const logoUrl = `https://media.api-sports.io/football/teams/${apiFootballId}.png`;
+  return upsertClubFromApiFootball(nom, LIGUE_EXTERNE, apiFootballId, logoUrl);
 }
 
 function normaliserNomClub(nom: string): string {
