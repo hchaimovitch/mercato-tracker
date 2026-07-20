@@ -8,6 +8,7 @@ import { HeaderGradient } from '../components/HeaderGradient';
 import { LeagueChipRow } from '../components/LeagueChipRow';
 import { ErrorView, LoadingView } from '../components/ScreenState';
 import { TransferCard } from '../components/TransferCard';
+import { TypeFilterRow, type TransferType } from '../components/TypeFilterRow';
 import { WindowSelector } from '../components/WindowSelector';
 import type { FluxStackParamList } from '../navigation/types';
 import { useWindowState } from '../storage/WindowProvider';
@@ -19,10 +20,11 @@ type Props = NativeStackScreenProps<FluxStackParamList, 'FluxHome'>;
 export function FluxScreen({ navigation }: Props) {
   const { window, setWindow } = useWindowState();
   const [league, setLeague] = useState<LeagueId | undefined>(undefined);
+  const [type, setType] = useState<TransferType | undefined>(undefined);
 
   const windowsQuery = useWindows();
   const leaguesQuery = useLeagues();
-  const feedQuery = useFeed(window, league);
+  const feedQuery = useFeed(window, league, type);
 
   const activeWindow = windowsQuery.data?.find((w) => w.id === window);
   const live = activeWindow?.live ?? true;
@@ -55,6 +57,7 @@ export function FluxScreen({ navigation }: Props) {
         {leaguesQuery.data && (
           <LeagueChipRow leagues={leaguesQuery.data} value={league} onChange={setLeague} />
         )}
+        <TypeFilterRow value={type} onChange={setType} />
       </HeaderGradient>
 
       {feedQuery.isLoading ? (
