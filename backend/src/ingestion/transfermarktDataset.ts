@@ -105,6 +105,7 @@ export async function synchroniserMontantsTransfermarkt(): Promise<void> {
   let montantInconnuCoteSource = 0;
   const echantillonAucunJoueur: string[] = [];
   const echantillonAucunClub: { joueur: string; nosClubs: string; candidats: string }[] = [];
+  const completions: { joueur: string; montant: string }[] = [];
   for (const t of sansMontant) {
     const candidats = parJoueur.get(cleJoueur(t.joueur));
     if (!candidats || candidats.length === 0) {
@@ -152,8 +153,10 @@ export async function synchroniserMontantsTransfermarkt(): Promise<void> {
       continue;
     }
 
-    await mettreAJourMontant(t.id, formatMontant(feeEur));
+    const montant = formatMontant(feeEur);
+    await mettreAJourMontant(t.id, montant);
     completes++;
+    if (completions.length < 200) completions.push({ joueur: t.joueur, montant });
   }
 
   console.log(
@@ -166,5 +169,8 @@ export async function synchroniserMontantsTransfermarkt(): Promise<void> {
   }
   if (echantillonAucunClub.length > 0) {
     console.log(`[transfermarkt-dataset] échantillon de clubs non reconnus : ${JSON.stringify(echantillonAucunClub)}`);
+  }
+  if (completions.length > 0) {
+    console.log(`[transfermarkt-dataset] montants complétés : ${JSON.stringify(completions)}`);
   }
 }
