@@ -1,6 +1,7 @@
 import cron from 'node-cron';
 import { synchroniserTransfertsOfficiels } from './apiFootball.sync.js';
 import { synchroniserRumeurs } from './sportmonks.sync.js';
+import { synchroniserRumeursRss } from './rssRumeurs.sync.js';
 import { synchroniserMontantsTransfermarkt } from './transfermarktDataset.js';
 
 async function runSyncCycle() {
@@ -13,6 +14,11 @@ async function runSyncCycle() {
     await synchroniserRumeurs();
   } catch (err) {
     console.error('[scheduler] échec sync rumeurs :', err);
+  }
+  try {
+    await synchroniserRumeursRss();
+  } catch (err) {
+    console.error('[scheduler] échec sync rumeurs RSS :', err);
   }
 }
 

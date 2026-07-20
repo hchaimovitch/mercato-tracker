@@ -18,6 +18,7 @@ App de suivi du mercato de football pour les 5 grands championnats européens (A
 
 **Rumeurs (optionnel) :**
 - SportMonks propose une vraie "Transfer Rumours API" (probabilité LOW/MEDIUM/HIGH + source + lien) — le seul fournisseur trouvé avec des rumeurs structurées. C'est un add-on payant dont le prix exact n'est pas public ; l'intégration est prête (`backend/src/ingestion/sportmonks.*`) mais désactivée tant que `SPORTMONKS_KEY` n'est pas renseignée. Sans elle, l'app fonctionne normalement avec uniquement les transferts officiels.
+- Alternative gratuite en complément : `backend/src/ingestion/rssRumeurs.*` lit 2 flux RSS publics (BBC Sport, Sky Sports football), filtre les articles qui citent un club Big 5 par son nom complet (limite connue : un article qui n'utilise qu'un surnom de club, "Gunners"/"Red Devils", sans jamais écrire le nom complet, ne matchera pas), puis envoie uniquement les candidats retenus à Claude Haiku 4.5 pour extraire joueur/clubs/probabilité en JSON structuré (schéma Zod, `client.messages.parse`). Désactivé tant que `ANTHROPIC_API_KEY` n'est pas renseignée. Coût estimé : quelques millièmes de dollar par article analysé (Haiku, ~500-1000 tokens en entrée par appel) — un crédit de 5$ devrait durer plusieurs mois vu le faible volume (2 flux, filtrés). **Non testé avec une vraie clé Anthropic depuis cet environnement** (comme SportMonks) ; les URLs des 2 flux RSS n'ont pas non plus pu être vérifiées en direct depuis ce bac à sable (accès réseau sortant restreint à une liste blanche qui ne les inclut pas) — à vérifier une fois déployé, en cas d'URL changée côté BBC/Sky il suffira de corriger `FLUX_RSS` dans `rssRumeurs.client.ts`.
 - **Limite assumée** : aucune source ne fournit automatiquement les statuts fins `contact_confirme` / `negociation` / `accord_clubs` / `accord_joueur`. Le pipeline automatique ne peuple que `rumeur` (LOW), `contact_confirme` (MEDIUM), `negociation` (HIGH) et `officiel`. Les statuts `accord_clubs`, `accord_joueur` et `annule` restent réservés à la curation manuelle (`PATCH /curation/transferts/:id/statut`) — pas de UI dédiée dans l'app pour l'instant, seulement l'endpoint.
 - La fiche transfert distingue visuellement une étape "confirmée", "sautée (non documentée)" ou "ajustée manuellement" — jamais présentée comme certaine si elle ne l'est pas.
 
@@ -83,7 +84,7 @@ git push -u origin main
   - **Build Command** : `npm install && npm run build`
   - **Start Command** : `npm start`
   - **Plan** : Free
-- Dans "Environment Variables", ajoute : `API_FOOTBALL_KEY`, `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN` (et `SPORTMONKS_KEY` si tu l'as).
+- Dans "Environment Variables", ajoute : `API_FOOTBALL_KEY`, `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN` (et `SPORTMONKS_KEY`/`ANTHROPIC_API_KEY` si tu les as).
 - Déploie. Render te donne une URL du style `https://mercato-backend-xxxx.onrender.com`.
 
 ⚠️ Le plan gratuit de Render met le service en veille après 15 min d'inactivité (environ 1 min pour se réveiller au prochain appel) — normal, pas un bug.
