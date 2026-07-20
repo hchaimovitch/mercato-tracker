@@ -3,6 +3,8 @@
 // uniquement si SPORTMONKS_KEY est configurée (voir isSportmonksActif) : sans
 // clé, l'app fonctionne normalement avec uniquement les transferts officiels.
 
+import { fetchAvecTimeout } from './fetchAvecTimeout.js';
+
 const BASE = 'https://api.sportmonks.com/v3/football';
 
 export function isSportmonksActif(): boolean {
@@ -40,7 +42,7 @@ async function sportmonksGet<T>(path: string, params: Record<string, string> = {
     url.searchParams.set('page', String(page));
     for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v);
 
-    const res = await fetch(url.toString());
+    const res = await fetchAvecTimeout(url.toString());
     if (!res.ok) throw new Error(`SportMonks ${path} → HTTP ${res.status}`);
     const json = (await res.json()) as SportmonksResponse<T[]>;
     results.push(...json.data);

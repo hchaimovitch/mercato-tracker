@@ -17,7 +17,9 @@ export interface ArticleRss {
   datePublication: string; // ISO
 }
 
-const parser = new Parser();
+// timeout : voir fetchAvecTimeout.ts pour le raisonnement (un flux qui ne répond
+// pas ne doit jamais geler tout le cycle de synchronisation).
+const parser = new Parser({ timeout: 15_000 });
 
 export async function telechargerFlux(url: string): Promise<ArticleRss[]> {
   const flux = await parser.parseURL(url);

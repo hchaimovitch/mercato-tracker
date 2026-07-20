@@ -7,6 +7,8 @@
 //  - direct (api-sports.io)      → header x-apisports-key
 //  - via RapidAPI                → headers x-rapidapi-key / x-rapidapi-host
 
+import { fetchAvecTimeout } from './fetchAvecTimeout.js';
+
 const DIRECT_HOST = 'v3.football.api-sports.io';
 const RAPIDAPI_HOST = 'api-football-v1.p.rapidapi.com';
 
@@ -32,7 +34,7 @@ async function apiFootballGet<T>(path: string, params: Record<string, string | n
   const { base, headers } = baseUrlAndHeaders();
   const url = new URL(base + path);
   for (const [k, v] of Object.entries(params)) url.searchParams.set(k, String(v));
-  const res = await fetch(url.toString(), { headers });
+  const res = await fetchAvecTimeout(url.toString(), { headers });
   if (!res.ok) throw new Error(`API-Football ${path} → HTTP ${res.status}`);
   const json = (await res.json()) as { response: T; errors?: unknown };
   // L'API répond souvent HTTP 200 même en cas de clé invalide/quota dépassé, avec
