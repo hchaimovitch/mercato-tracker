@@ -6,6 +6,7 @@ import { enregistrerCitation } from './matching.js';
 import { categoriserSource } from './sourceCategorization.js';
 import { FLUX_RSS, telechargerFlux } from './rssRumeurs.client.js';
 import { extraireRumeur, isClaudeActif } from './rssRumeurs.claude.js';
+import { ALIASES_LITTERAUX, resoudreAliasClub } from './clubAliases.js';
 import type { LeagueId } from '../types.js';
 
 const cleEtat = (nomFlux: string) => `rss_derniere_maj:${nomFlux}`;
@@ -27,7 +28,10 @@ export async function synchroniserRumeursRss(): Promise<void> {
   }
 
   const clubsBig5 = await listerClubsBig5();
-  const regexClubs = clubsBig5.map((c) => new RegExp(`\\b${echapperRegex(c.nom)}\\b`, 'i'));
+  const regexClubs = [
+    ...clubsBig5.map((c) => new RegExp(`\\b${echapperRegex(c.nom)}\\b`, 'i')),
+    ...ALIASES_LITTERAUX.map((a) => new RegExp(`\\b${echapperRegex(a)}\\b`, 'i')),
+  ];
   const citeUnClubBig5 = (texte: string) => regexClubs.some((r) => r.test(texte));
 
   let candidats = 0;
@@ -66,8 +70,8 @@ export async function synchroniserRumeursRss(): Promise<void> {
       analyses++;
       if (!extraction || !extraction.estTransfert || !extraction.joueur || !extraction.probabilite) continue;
 
-      const clubEntrant = extraction.clubArrivee ? await trouverClubBig5ParNom(extraction.clubArrivee) : undefined;
-      const clubSortant = extraction.clubDepart ? await trouverClubBig5ParNom(extraction.clubDepart) : undefined;
+      const clubEntrant = extraction.clubArrivee ? await trouverClubBig5ParNom(resoudreAliasClub(extraction.clubArrivee)) : undefined;
+      const clubSortant = extraction.clubDepart ? await trouverClubBig5ParNom(resoudreAliasClub(extraction.clubDepart)) : undefined;
       if (!clubEntrant && !clubSortant) continue; // ni club connu ni correspondance de nom — on ignore plutôt que de deviner
 
       const dateArticle = article.datePublication.slice(0, 10);
