@@ -23,6 +23,12 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "plugins": ["expo-notifications"]
+    "plugins": ["expo-notifications"],
+    "extra": {
+      "eas": {
+        "projectId": "2f96002b-2125-4a3a-9b7a-eacb7ab52d0d"
+      }
+    },
+    "owner": "hugopoliich"
   }
 }
