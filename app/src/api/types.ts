@@ -42,6 +42,7 @@ export interface Segment {
 export interface TransferCard {
   id: number;
   joueur: string;
+  joueurPhotoUrl: string | null;
   meta: string | null;
   updated: string;
   breaking: boolean;
@@ -166,6 +167,25 @@ export interface ClubView {
   hasDep: boolean;
   noArr: boolean;
   noDep: boolean;
+}
+
+export type AlerteType = 'joueur' | 'club';
+
+export interface Alerte {
+  id: number;
+  type: AlerteType;
+  joueurNom: string | null;
+  clubId: number | null;
+  createdAt: string;
+}
+
+export interface ClubListItem {
+  id: number;
+  nom: string;
+  abbr: string;
+  couleur: string;
+  logoUrl: string | null;
+  championnatId: LeagueId;
 }
 
 export interface SourceProfile {

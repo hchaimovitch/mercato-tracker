@@ -55,6 +55,7 @@ CREATE TABLE IF NOT EXISTS sources (
 CREATE TABLE IF NOT EXISTS transferts (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   joueur TEXT NOT NULL,
+  joueur_api_football_id INTEGER,
   club_sortant_id INTEGER REFERENCES clubs(id),
   club_entrant_id INTEGER REFERENCES clubs(id),
   championnat_id TEXT NOT NULL REFERENCES leagues(id),
@@ -95,4 +96,18 @@ CREATE TABLE IF NOT EXISTS sync_state (
   valeur TEXT,
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
+
+-- Pas de compte utilisateur dans l'app : push_token identifie l'appareil.
+-- joueur_nom (correspondance approximative par nom) ou club_id (correspondance
+-- exacte), jamais les deux à la fois — voir type.
+CREATE TABLE IF NOT EXISTS alertes (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  push_token TEXT NOT NULL,
+  type TEXT NOT NULL CHECK(type IN ('joueur','club')),
+  joueur_nom TEXT,
+  club_id INTEGER REFERENCES clubs(id),
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_alertes_push_token ON alertes(push_token);
 `;

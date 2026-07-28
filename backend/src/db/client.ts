@@ -36,8 +36,8 @@ let initialized = false;
  * idempotent (vérifié via PRAGMA avant d'altérer).
  */
 async function migrerColonnesManquantes(): Promise<void> {
-  const info = await db.execute('PRAGMA table_info(clubs)');
-  const aLogoUrl = info.rows.some((r: any) => r.name === 'logo_url');
+  const infoClubs = await db.execute('PRAGMA table_info(clubs)');
+  const aLogoUrl = infoClubs.rows.some((r: any) => r.name === 'logo_url');
   if (!aLogoUrl) {
     await db.execute('ALTER TABLE clubs ADD COLUMN logo_url TEXT');
   }
@@ -49,6 +49,12 @@ async function migrerColonnesManquantes(): Promise<void> {
     "UPDATE clubs SET logo_url = 'https://media.api-sports.io/football/teams/' || api_football_id || '.png' " +
     "WHERE championnat_id = 'ext' AND logo_url IS NULL AND api_football_id IS NOT NULL"
   );
+
+  const infoTransferts = await db.execute('PRAGMA table_info(transferts)');
+  const aJoueurId = infoTransferts.rows.some((r: any) => r.name === 'joueur_api_football_id');
+  if (!aJoueurId) {
+    await db.execute('ALTER TABLE transferts ADD COLUMN joueur_api_football_id INTEGER');
+  }
 }
 
 /** Crée le schéma et le référentiel (championnats/fenêtres) au premier démarrage — idempotent. */

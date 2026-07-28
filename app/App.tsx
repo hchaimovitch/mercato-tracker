@@ -5,6 +5,7 @@ import { ActivityIndicator, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { RootNavigator } from './src/navigation/RootNavigator';
 import { FollowsProvider } from './src/storage/FollowsProvider';
+import { PushTokenProvider } from './src/storage/PushTokenProvider';
 import { WindowProvider } from './src/storage/WindowProvider';
 import { colors } from './src/theme/colors';
 import { manropeFonts } from './src/theme/typography';
@@ -29,8 +30,10 @@ export default function App() {
       <QueryClientProvider client={queryClient}>
         <FollowsProvider>
           <WindowProvider>
-            <StatusBar style="light" />
-            <RootNavigator />
+            <PushTokenProvider>
+              <StatusBar style="light" />
+              <RootNavigator />
+            </PushTokenProvider>
           </WindowProvider>
         </FollowsProvider>
       </QueryClientProvider>

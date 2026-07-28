@@ -1,7 +1,10 @@
-import { useQuery } from '@tanstack/react-query';
-import { fetchJson } from './client';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { deleteRequest, fetchJson, postJson } from './client';
 import type { TransferType } from '../components/TypeFilterRow';
 import type {
+  Alerte,
+  AlerteType,
+  ClubListItem,
   ClubView,
   League,
   LeagueId,
@@ -73,5 +76,34 @@ export function useSourceProfile(sourceId: number | null) {
     queryKey: ['source', sourceId],
     queryFn: () => fetchJson<SourceProfile>(`/sources/${sourceId}`),
     enabled: sourceId != null,
+  });
+}
+
+export function useClubsList() {
+  return useQuery({ queryKey: ['clubs-list'], queryFn: () => fetchJson<ClubListItem[]>('/clubs') });
+}
+
+export function useAlertes(pushToken: string | null) {
+  return useQuery({
+    queryKey: ['alertes', pushToken],
+    queryFn: () => fetchJson<Alerte[]>('/alertes', { pushToken: pushToken! }),
+    enabled: !!pushToken,
+  });
+}
+
+export function useCreateAlerte(pushToken: string | null) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { type: AlerteType; joueurNom?: string; clubId?: number }) =>
+      postJson<Alerte>('/alertes', { pushToken, ...input }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['alertes', pushToken] }),
+  });
+}
+
+export function useDeleteAlerte(pushToken: string | null) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => deleteRequest(`/alertes/${id}`, { pushToken: pushToken! }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['alertes', pushToken] }),
   });
 }

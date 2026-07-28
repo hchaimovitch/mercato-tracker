@@ -120,6 +120,7 @@ export async function synchroniserTransfertsOfficiels(): Promise<void> {
 
           await enregistrerCitation({
             joueur: joueurTransferts.player.name,
+            joueurApiFootballId: joueurTransferts.player.id,
             clubSortantId,
             clubEntrantId,
             championnatId: club.championnat_id as LeagueId,

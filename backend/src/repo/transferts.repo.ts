@@ -4,6 +4,7 @@ import type { LeagueId, Statut, TransfertRow } from '../types.js';
 function toTransfertRow(r: any): TransfertRow {
   return {
     id: Number(r.id), joueur: r.joueur,
+    joueur_api_football_id: r.joueur_api_football_id === null ? null : Number(r.joueur_api_football_id),
     club_sortant_id: r.club_sortant_id === null ? null : Number(r.club_sortant_id),
     club_entrant_id: r.club_entrant_id === null ? null : Number(r.club_entrant_id),
     championnat_id: r.championnat_id, fenetre_id: r.fenetre_id, statut: r.statut,
@@ -25,6 +26,7 @@ export async function getTransfert(id: number): Promise<TransfertRow | undefined
 
 export interface NouveauTransfert {
   joueur: string;
+  joueurApiFootballId?: number | null;
   clubSortantId: number | null;
   clubEntrantId: number | null;
   championnatId: LeagueId;
@@ -38,10 +40,11 @@ export interface NouveauTransfert {
 
 export async function insererTransfert(t: NouveauTransfert): Promise<TransfertRow> {
   await db.execute({
-    sql: `INSERT INTO transferts (joueur, club_sortant_id, club_entrant_id, championnat_id, fenetre_id, statut, score_fiabilite, montant, date_transfert, cle_correspondance)
-          VALUES (@joueur, @club_sortant_id, @club_entrant_id, @championnat_id, @fenetre_id, @statut, @score_fiabilite, @montant, @date_transfert, @cle_correspondance)`,
+    sql: `INSERT INTO transferts (joueur, joueur_api_football_id, club_sortant_id, club_entrant_id, championnat_id, fenetre_id, statut, score_fiabilite, montant, date_transfert, cle_correspondance)
+          VALUES (@joueur, @joueur_api_football_id, @club_sortant_id, @club_entrant_id, @championnat_id, @fenetre_id, @statut, @score_fiabilite, @montant, @date_transfert, @cle_correspondance)`,
     args: {
-      joueur: t.joueur, club_sortant_id: t.clubSortantId, club_entrant_id: t.clubEntrantId,
+      joueur: t.joueur, joueur_api_football_id: t.joueurApiFootballId ?? null,
+      club_sortant_id: t.clubSortantId, club_entrant_id: t.clubEntrantId,
       championnat_id: t.championnatId, fenetre_id: t.fenetreId, statut: t.statut,
       score_fiabilite: t.scoreFiabilite, montant: t.montant, date_transfert: t.dateTransfert,
       cle_correspondance: t.cleCorrespondance,
@@ -76,6 +79,13 @@ export async function mettreAJourScore(id: number, scoreFiabilite: number | null
 export async function listerTransfertsSansMontant(): Promise<TransfertRow[]> {
   const rs = await db.execute("SELECT * FROM transferts WHERE montant IS NULL OR montant NOT GLOB '*[0-9]*'");
   return rs.rows.map(toTransfertRow);
+}
+
+export async function mettreAJourJoueurApiFootballId(id: number, joueurApiFootballId: number): Promise<void> {
+  await db.execute({
+    sql: 'UPDATE transferts SET joueur_api_football_id = @joueur_api_football_id WHERE id = @id',
+    args: { id, joueur_api_football_id: joueurApiFootballId },
+  });
 }
 
 export async function mettreAJourMontant(id: number, montant: string): Promise<void> {

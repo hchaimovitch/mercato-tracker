@@ -48,6 +48,7 @@ export interface SourceRow {
 export interface TransfertRow {
   id: number;
   joueur: string;
+  joueur_api_football_id: number | null;
   club_sortant_id: number | null;
   club_entrant_id: number | null;
   championnat_id: LeagueId;
@@ -59,6 +60,17 @@ export interface TransfertRow {
   cle_correspondance: string;
   created_at: string;
   updated_at: string;
+}
+
+export type AlerteType = 'joueur' | 'club';
+
+export interface AlerteRow {
+  id: number;
+  push_token: string;
+  type: AlerteType;
+  joueur_nom: string | null;
+  club_id: number | null;
+  created_at: string;
 }
 
 export interface HistoriqueStatutRow {

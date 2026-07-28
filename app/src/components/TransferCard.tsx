@@ -3,6 +3,7 @@ import type { TransferCard as TransferCardData } from '../api/types';
 import { colors } from '../theme/colors';
 import { manrope } from '../theme/typography';
 import { ClubBadge } from './ClubBadge';
+import { PlayerAvatar } from './PlayerAvatar';
 import { ProgressSegments } from './ProgressSegments';
 import { SignalBadge } from './SignalBadge';
 
@@ -34,9 +35,12 @@ export function TransferCard({ transfer: t, onPress }: TransferCardProps) {
         </View>
       </View>
 
-      <View>
-        <Text style={styles.player}>{t.joueur}</Text>
-        {t.meta && <Text style={styles.meta}>{t.meta}</Text>}
+      <View style={styles.playerRow}>
+        <PlayerAvatar nom={t.joueur} photoUrl={t.joueurPhotoUrl} size={40} radius={12} />
+        <View style={{ minWidth: 0, flexShrink: 1 }}>
+          <Text style={styles.player}>{t.joueur}</Text>
+          {t.meta && <Text style={styles.meta}>{t.meta}</Text>}
+        </View>
       </View>
 
       <View style={styles.faceRow}>
@@ -117,6 +121,7 @@ const styles = StyleSheet.create({
   topRight: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   updated: { fontFamily: manrope(600), fontSize: 11, color: colors.textFaint },
   chevron: { fontSize: 16, fontFamily: manrope(700), color: colors.amber },
+  playerRow: { flexDirection: 'row', alignItems: 'center', gap: 11 },
   player: { fontFamily: manrope(800), fontSize: 20, letterSpacing: -0.4, color: colors.textPrimary, lineHeight: 23 },
   meta: { fontFamily: manrope(500), fontSize: 12.5, color: colors.textMuted, marginTop: 2 },
   faceRow: {

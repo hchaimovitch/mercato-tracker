@@ -26,6 +26,7 @@ function clubRef(row: ClubRow | undefined): ClubRefDTO {
 export interface TransferCardDTO {
   id: number;
   joueur: string;
+  joueurPhotoUrl: string | null;
   meta: string | null;
   updated: string;
   breaking: boolean;
@@ -42,6 +43,17 @@ export interface TransferCardDTO {
   segs: { on: boolean }[];
 }
 
+/**
+ * Même CDN et même convention prévisible qu'API-Football pour les logos de
+ * club (media.api-sports.io/football/teams/{id}.png), documentée pour les
+ * joueurs de façon analogue. Non disponible pour les rumeurs RSS/SportMonks
+ * (pas d'id API-Football fourni par ces sources) — repli sur des initiales
+ * côté app dans ce cas, jamais de photo devinée.
+ */
+function joueurPhotoUrl(id: number | null): string | null {
+  return id ? `https://media.api-sports.io/football/players/${id}.png` : null;
+}
+
 export async function toCard(t: TransfertRow): Promise<TransferCardDTO> {
   const league = await getLeague(t.championnat_id as LeagueId);
   const from = t.club_sortant_id ? await getClub(t.club_sortant_id) : undefined;
@@ -54,6 +66,7 @@ export async function toCard(t: TransfertRow): Promise<TransferCardDTO> {
   return {
     id: t.id,
     joueur: t.joueur,
+    joueurPhotoUrl: joueurPhotoUrl(t.joueur_api_football_id),
     // Position/âge/nationalité nécessiteraient un appel /players séparé (coût de quota
     // supplémentaire) — non inclus pour l'instant, voir README. Champ null assumé, pas simulé.
     meta: null,

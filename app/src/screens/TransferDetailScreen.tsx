@@ -6,6 +6,7 @@ import { BackButton } from '../components/BackButton';
 import { ClubBadge } from '../components/ClubBadge';
 import { GlowButton } from '../components/GlowButton';
 import { HeaderGradient } from '../components/HeaderGradient';
+import { PlayerAvatar } from '../components/PlayerAvatar';
 import { ProgressSegments } from '../components/ProgressSegments';
 import { ErrorView, LoadingView } from '../components/ScreenState';
 import { SignalBadge } from '../components/SignalBadge';
@@ -113,9 +114,7 @@ function DetailBody({ t, navigation, backLabel }: { t: TransferDetail; navigatio
         )}
 
         <View style={styles.playerRow}>
-          <View style={styles.photoPlaceholder}>
-            <Text style={styles.photoInitials}>{t.joueur.split(' ').map((p) => p[0]).slice(0, 2).join('')}</Text>
-          </View>
+          <PlayerAvatar nom={t.joueur} photoUrl={t.joueurPhotoUrl} size={64} radius={16} />
           <View style={{ minWidth: 0, flexShrink: 1 }}>
             <Text style={styles.playerName}>{t.joueur}</Text>
             {t.meta && <Text style={styles.playerMeta}>{t.meta}</Text>}
@@ -305,11 +304,6 @@ const styles = StyleSheet.create({
   annuleBadgeText: { fontFamily: manrope(800), fontSize: 10, letterSpacing: 0.7, color: colors.greyNeutral },
   annuleText: { fontFamily: manrope(700), fontSize: 15, color: colors.textMuted, marginTop: 4 },
   playerRow: { flexDirection: 'row', alignItems: 'center', gap: 14 },
-  photoPlaceholder: {
-    width: 64, height: 64, borderRadius: 16, borderWidth: 1, borderColor: colors.borderInput,
-    backgroundColor: '#1a150e', alignItems: 'center', justifyContent: 'center',
-  },
-  photoInitials: { fontFamily: manrope(800), fontSize: 20, color: colors.textFaint },
   playerName: { fontFamily: manrope(800), fontSize: 24, letterSpacing: -0.5, color: colors.textPrimary, lineHeight: 27 },
   playerMeta: { fontFamily: manrope(600), fontSize: 12.5, color: colors.textMuted, marginTop: 3 },
   body: { padding: 16, gap: 15 },

@@ -29,6 +29,14 @@ App de suivi du mercato de football pour les 5 grands championnats européens (A
 - Classification automatique de la catégorie d'une source (`club_officiel`/`journaliste_reconnu`/`media_generaliste`/`non_verifie`) : catalogue curaté à la main (`backend/src/ingestion/sourceCategorization.ts`), toute source inconnue tombe par défaut sur `non_verifie` plutôt que de lui prêter une crédibilité non vérifiée.
 - Correspondance des clubs entre fournisseurs (API-Football / SportMonks) : par nom normalisé, faute d'identifiant commun — limite documentée dans le code, peut manquer une rumeur en cas de variante de nom trop inhabituelle.
 
+**Photo du joueur :**
+- Construite à partir de l'id joueur d'API-Football (`https://media.api-sports.io/football/players/{id}.png`, même convention CDN que les logos de club), disponible uniquement pour les transferts vus par API-Football. Un transfert créé d'abord via RSS/SportMonks (pas d'id joueur fourni par ces sources) n'a pas de photo tant qu'API-Football ne le confirme pas à son tour — repli sur des initiales dans ce cas, jamais de photo devinée.
+
+**Alertes push (joueur/club) :**
+- `backend/src/routes/alertes.ts` (CRUD) + un déclenchement dans `enregistrerCitation()` (`backend/src/ingestion/matching.ts`) qui notifie les alertes concernées via le service push gratuit d'Expo à chaque nouvelle rumeur, mise à jour de statut, ou résolution (officiel/annulé). Pas de compte utilisateur : le push token de l'appareil sert d'identifiant.
+- Correspondance joueur par nom de famille normalisé (même principe que la complétion des montants Transfermarkt) — un homonyme exact ferait matcher à tort, cas jugé rare.
+- **Nécessite une configuration Firebase/FCM V1 côté build** (voir section "Construire le .apk final" ci-dessous) — sans ça, l'app ne peut pas obtenir de push token et l'écran Alertes affiche un message l'expliquant plutôt que d'échouer silencieusement.
+
 ## Lancer le projet en développement
 
 **Backend**
@@ -95,11 +103,22 @@ Un build de développement (Expo Go) ne suffit pas pour un fichier installable d
 
 ```
 cd app
-npm install -g eas-cli
-eas login
+npx eas-cli@latest login
 ```
 
+(Utilise `npx eas-cli@latest` plutôt que `npm install -g eas-cli` si l'install globale échoue avec une erreur de permissions `EACCES` — évite complètement le problème.)
+
 Édite `app/eas.json` : remplace l'URL placeholder dans `build.preview.env.EXPO_PUBLIC_API_URL` par une adresse **réellement joignable depuis le téléphone** (pas `localhost`) — soit l'IP publique/domaine d'un backend déployé quelque part, soit l'IP locale de ton ordinateur si le téléphone reste sur le même Wi-Fi en permanence.
+
+**Pour que les alertes push fonctionnent (Android)**, une étape supplémentaire est nécessaire — Google a déprécié l'ancien protocole FCM et exige désormais un vrai projet Firebase, Expo n'a plus d'identifiants partagés utilisables en production :
+
+1. Lie le projet à EAS s'il ne l'est pas déjà : `npx eas-cli@latest init` (écrit `extra.eas.projectId` dans `app.json` — commit ce changement).
+2. Crée un projet sur https://console.firebase.google.com (ou réutilise un projet existant).
+3. Dans Firebase, **Project settings → Service accounts** → "Generate New Private Key" → télécharge le JSON.
+4. `npx eas-cli@latest credentials` → `Android` → `production` (ou le profil utilisé) → `Google Service Account` → "Set up a Google Service Account Key" → upload le JSON téléchargé (ne le commit jamais, ajoute-le à `.gitignore` si besoin).
+5. Toujours dans Firebase Console, ajoute une app Android avec le même nom de package que `app.json` (`com.mercatotracker.app`), télécharge `google-services.json`, place-le à la racine de `app/`, et ajoute dans `app.json` : `"android": { "googleServicesFile": "./google-services.json" }`.
+
+Sans cette configuration, l'app fonctionne normalement pour tout le reste — l'écran Alertes affiche juste un message expliquant que les notifications ne sont pas disponibles, plutôt que d'échouer silencieusement.
 
 ```
 eas build -p android --profile preview

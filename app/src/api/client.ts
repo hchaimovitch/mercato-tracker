@@ -27,16 +27,42 @@ export class ApiError extends Error {
   }
 }
 
-export async function fetchJson<T>(path: string, params?: Record<string, string | undefined>): Promise<T> {
+function buildUrl(path: string, params?: Record<string, string | undefined>): URL {
   const url = new URL(path, API_BASE_URL);
   if (params) {
     for (const [key, value] of Object.entries(params)) {
       if (value !== undefined) url.searchParams.set(key, value);
     }
   }
+  return url;
+}
+
+export async function fetchJson<T>(path: string, params?: Record<string, string | undefined>): Promise<T> {
+  const url = buildUrl(path, params);
   const res = await fetch(url.toString());
   if (!res.ok) {
     throw new ApiError(res.status, `${res.status} ${res.statusText} — ${url.toString()}`);
   }
   return (await res.json()) as T;
+}
+
+export async function postJson<T>(path: string, body: unknown): Promise<T> {
+  const url = buildUrl(path);
+  const res = await fetch(url.toString(), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    throw new ApiError(res.status, `${res.status} ${res.statusText} — ${url.toString()}`);
+  }
+  return (await res.json()) as T;
+}
+
+export async function deleteRequest(path: string, params?: Record<string, string | undefined>): Promise<void> {
+  const url = buildUrl(path, params);
+  const res = await fetch(url.toString(), { method: 'DELETE' });
+  if (!res.ok) {
+    throw new ApiError(res.status, `${res.status} ${res.statusText} — ${url.toString()}`);
+  }
 }

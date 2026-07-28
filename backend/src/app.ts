@@ -1,5 +1,6 @@
 import cors from 'cors';
 import express from 'express';
+import { alertesRouter } from './routes/alertes.js';
 import { clubsRouter } from './routes/clubs.js';
 import { curationRouter } from './routes/curation.js';
 import { debugRouter } from './routes/debug.js';
@@ -22,6 +23,7 @@ export function createApp() {
   app.use('/sources', sourcesRouter);
   app.use('/curation', curationRouter);
   app.use('/debug', debugRouter);
+  app.use('/alertes', alertesRouter);
 
   return app;
 }
