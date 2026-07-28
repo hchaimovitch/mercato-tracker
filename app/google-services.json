@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "25158059111",
+    "project_id": "mercato-tracker",
+    "storage_bucket": "mercato-tracker.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:25158059111:android:f6dee54dbbb79fd70780c2",
+        "android_client_info": {
+          "package_name": "com.mercatotracker.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD76P4063knFEGMOgwBlk2zKBMUXli84PQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
