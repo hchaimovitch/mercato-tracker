@@ -1,6 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { deleteRequest, fetchJson, postJson } from './client';
-import type { TransferType } from '../components/TypeFilterRow';
 import type {
   Alerte,
   AlerteType,
@@ -25,10 +24,10 @@ export function useLeagues() {
   return useQuery({ queryKey: ['leagues'], queryFn: () => fetchJson<League[]>('/leagues') });
 }
 
-export function useFeed(window: WindowId, league?: LeagueId, type?: TransferType) {
+export function useFeed(window: WindowId, league?: LeagueId) {
   return useQuery({
-    queryKey: ['transfers', window, league ?? 'all', type ?? 'all'],
-    queryFn: () => fetchJson<TransferCard[]>('/transfers', { window, league, type }),
+    queryKey: ['transfers', window, league ?? 'all'],
+    queryFn: () => fetchJson<TransferCard[]>('/transfers', { window, league }),
   });
 }
 
@@ -76,6 +75,14 @@ export function useSourceProfile(sourceId: number | null) {
     queryKey: ['source', sourceId],
     queryFn: () => fetchJson<SourceProfile>(`/sources/${sourceId}`),
     enabled: sourceId != null,
+  });
+}
+
+export function useJoueursSuggestions(recherche: string) {
+  return useQuery({
+    queryKey: ['joueurs-suggestions', recherche],
+    queryFn: () => fetchJson<string[]>('/joueurs', { q: recherche }),
+    enabled: recherche.trim().length >= 2,
   });
 }
 

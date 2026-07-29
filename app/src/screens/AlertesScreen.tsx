@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
-import { useAlertes, useClubsList, useCreateAlerte, useDeleteAlerte } from '../api/hooks';
+import { useAlertes, useClubsList, useCreateAlerte, useDeleteAlerte, useJoueursSuggestions } from '../api/hooks';
 import type { AlerteType } from '../api/types';
 import { ClubBadge } from '../components/ClubBadge';
 import { EmptyState } from '../components/EmptyState';
@@ -15,10 +15,19 @@ export function AlertesScreen() {
   const { pushToken, ready, error } = usePushToken();
   const [type, setType] = useState<AlerteType>('joueur');
   const [joueurNom, setJoueurNom] = useState('');
+  const [joueurRecherche, setJoueurRecherche] = useState('');
   const [clubId, setClubId] = useState<number | null>(null);
+
+  // Petit délai avant de lancer la recherche : évite une requête à chaque frappe.
+  useEffect(() => {
+    const id = setTimeout(() => setJoueurRecherche(joueurNom.trim()), 250);
+    return () => clearTimeout(id);
+  }, [joueurNom]);
 
   const alertesQuery = useAlertes(pushToken);
   const clubsQuery = useClubsList();
+  const suggestionsQuery = useJoueursSuggestions(joueurRecherche);
+  const suggestions = (suggestionsQuery.data ?? []).slice(0, 6);
   const createAlerte = useCreateAlerte(pushToken);
   const deleteAlerte = useDeleteAlerte(pushToken);
 
@@ -27,7 +36,10 @@ export function AlertesScreen() {
   const onCreate = () => {
     if (type === 'joueur') {
       if (!joueurNom.trim()) return;
-      createAlerte.mutate({ type: 'joueur', joueurNom: joueurNom.trim() }, { onSuccess: () => setJoueurNom('') });
+      createAlerte.mutate(
+        { type: 'joueur', joueurNom: joueurNom.trim() },
+        { onSuccess: () => { setJoueurNom(''); setJoueurRecherche(''); } }
+      );
     } else {
       if (clubId === null) return;
       createAlerte.mutate({ type: 'club', clubId }, { onSuccess: () => setClubId(null) });
@@ -68,13 +80,24 @@ export function AlertesScreen() {
             </View>
 
             {type === 'joueur' ? (
-              <TextInput
-                value={joueurNom}
-                onChangeText={setJoueurNom}
-                placeholder="Nom du joueur (ex: Mbappé)"
-                placeholderTextColor={colors.textFaint}
-                style={styles.input}
-              />
+              <View>
+                <TextInput
+                  value={joueurNom}
+                  onChangeText={setJoueurNom}
+                  placeholder="Nom du joueur (ex: Mbappé)"
+                  placeholderTextColor={colors.textFaint}
+                  style={styles.input}
+                />
+                {joueurNom.trim().length >= 2 && suggestions.length > 0 && (
+                  <View style={styles.suggestionsBox}>
+                    {suggestions.map((nom) => (
+                      <Pressable key={nom} onPress={() => setJoueurNom(nom)} style={styles.suggestionRow}>
+                        <Text style={styles.suggestionText} numberOfLines={1}>{nom}</Text>
+                      </Pressable>
+                    ))}
+                  </View>
+                )}
+              </View>
             ) : (
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.clubRow}>
                 {(clubsQuery.data ?? []).map((c) => {
@@ -149,6 +172,12 @@ const styles = StyleSheet.create({
     backgroundColor: colors.bgInset, paddingHorizontal: 13, fontFamily: manrope(600),
     fontSize: 14, color: colors.textPrimary,
   },
+  suggestionsBox: {
+    marginTop: 6, borderRadius: 10, borderWidth: 1, borderColor: colors.borderInput,
+    backgroundColor: colors.bgInset, overflow: 'hidden',
+  },
+  suggestionRow: { paddingHorizontal: 13, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: colors.borderSoft },
+  suggestionText: { fontFamily: manrope(600), fontSize: 13.5, color: colors.textSecondary },
   clubRow: { gap: 8, paddingVertical: 2 },
   clubChip: {
     flexDirection: 'row', alignItems: 'center', gap: 7, height: 38, paddingHorizontal: 11,

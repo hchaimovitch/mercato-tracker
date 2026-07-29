@@ -1,14 +1,13 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { useState } from 'react';
-import { FlatList, StyleSheet, Text, View } from 'react-native';
+import { useMemo, useState } from 'react';
+import { FlatList, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useFeed, useLeagues, useWindows } from '../api/hooks';
-import type { LeagueId } from '../api/types';
+import type { LeagueId, TransferCard as TransferCardData } from '../api/types';
 import { EmptyState } from '../components/EmptyState';
 import { HeaderGradient } from '../components/HeaderGradient';
 import { LeagueChipRow } from '../components/LeagueChipRow';
 import { ErrorView, LoadingView } from '../components/ScreenState';
 import { TransferCard } from '../components/TransferCard';
-import { TypeFilterRow, type TransferType } from '../components/TypeFilterRow';
 import { WindowSelector } from '../components/WindowSelector';
 import type { FluxStackParamList } from '../navigation/types';
 import { useWindowState } from '../storage/WindowProvider';
@@ -17,17 +16,31 @@ import { manrope } from '../theme/typography';
 
 type Props = NativeStackScreenProps<FluxStackParamList, 'FluxHome'>;
 
+function normaliser(s: string): string {
+  return s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+}
+
 export function FluxScreen({ navigation }: Props) {
   const { window, setWindow } = useWindowState();
   const [league, setLeague] = useState<LeagueId | undefined>(undefined);
-  const [type, setType] = useState<TransferType | undefined>(undefined);
+  const [recherche, setRecherche] = useState('');
 
   const windowsQuery = useWindows();
   const leaguesQuery = useLeagues();
-  const feedQuery = useFeed(window, league, type);
+  const feedQuery = useFeed(window, league);
 
   const activeWindow = windowsQuery.data?.find((w) => w.id === window);
   const live = activeWindow?.live ?? true;
+
+  const resultats = useMemo(() => {
+    if (!feedQuery.data) return feedQuery.data;
+    const q = normaliser(recherche.trim());
+    if (!q) return feedQuery.data;
+    return feedQuery.data.filter(
+      (t: TransferCardData) =>
+        normaliser(t.joueur).includes(q) || normaliser(t.from.name).includes(q) || normaliser(t.to.name).includes(q)
+    );
+  }, [feedQuery.data, recherche]);
 
   return (
     <View style={styles.screen}>
@@ -57,22 +70,34 @@ export function FluxScreen({ navigation }: Props) {
         {leaguesQuery.data && (
           <LeagueChipRow leagues={leaguesQuery.data} value={league} onChange={setLeague} />
         )}
-        <TypeFilterRow value={type} onChange={setType} />
+        {live && (
+          <TextInput
+            value={recherche}
+            onChangeText={setRecherche}
+            placeholder="Rechercher un joueur ou un club…"
+            placeholderTextColor={colors.textFaint}
+            style={styles.searchInput}
+          />
+        )}
       </HeaderGradient>
 
       {feedQuery.isLoading ? (
         <LoadingView />
       ) : feedQuery.isError ? (
         <ErrorView message={(feedQuery.error as Error).message} onRetry={() => feedQuery.refetch()} />
-      ) : feedQuery.data && feedQuery.data.length === 0 ? (
+      ) : resultats && resultats.length === 0 ? (
         <EmptyState
           glyph="⏳"
-          title="Aucun transfert pour l'instant"
-          description="La synchronisation avec les sources réelles tourne en tâche de fond (quota limité) — reviens un peu plus tard, ou change de fenêtre/championnat."
+          title={recherche.trim() ? 'Aucun résultat' : "Aucun transfert pour l'instant"}
+          description={
+            recherche.trim()
+              ? 'Aucun joueur ou club ne correspond à ta recherche.'
+              : 'La synchronisation avec les sources réelles tourne en tâche de fond (quota limité) — reviens un peu plus tard, ou change de fenêtre/championnat.'
+          }
         />
       ) : (
         <FlatList
-          data={feedQuery.data}
+          data={resultats}
           keyExtractor={(t) => String(t.id)}
           contentContainerStyle={styles.list}
           renderItem={({ item }) => (
@@ -104,5 +129,10 @@ const styles = StyleSheet.create({
   },
   closedCheck: { color: colors.green, fontSize: 12 },
   closedText: { fontFamily: manrope(600), fontSize: 11, color: colors.textMuted, flexShrink: 1 },
+  searchInput: {
+    height: 42, borderRadius: 11, borderWidth: 1, borderColor: colors.borderInput,
+    backgroundColor: colors.bgInset, paddingHorizontal: 13, fontFamily: manrope(600),
+    fontSize: 13.5, color: colors.textPrimary,
+  },
   list: { padding: 16, gap: 13 },
 });

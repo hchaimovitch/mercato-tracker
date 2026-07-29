@@ -4,6 +4,7 @@ import { alertesRouter } from './routes/alertes.js';
 import { clubsRouter } from './routes/clubs.js';
 import { curationRouter } from './routes/curation.js';
 import { debugRouter } from './routes/debug.js';
+import { joueursRouter } from './routes/joueurs.js';
 import { leaguesRouter } from './routes/leagues.js';
 import { sourcesRouter } from './routes/sources.js';
 import { transfersRouter } from './routes/transfers.js';
@@ -24,6 +25,7 @@ export function createApp() {
   app.use('/curation', curationRouter);
   app.use('/debug', debugRouter);
   app.use('/alertes', alertesRouter);
+  app.use('/joueurs', joueursRouter);
 
   return app;
 }

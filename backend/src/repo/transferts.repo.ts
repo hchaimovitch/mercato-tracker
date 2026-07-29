@@ -14,6 +14,18 @@ function toTransfertRow(r: any): TransfertRow {
   };
 }
 
+/**
+ * Pas de base de joueurs dédiée — sert d'auto-complétion pour la création
+ * d'alertes à partir des noms déjà vus dans les transferts enregistrés.
+ */
+export async function rechercherJoueurs(recherche: string, limite = 15): Promise<string[]> {
+  const rs = await db.execute({
+    sql: 'SELECT DISTINCT joueur FROM transferts WHERE joueur LIKE @recherche ORDER BY joueur LIMIT @limite',
+    args: { recherche: `%${recherche}%`, limite },
+  });
+  return rs.rows.map((r: any) => r.joueur as string);
+}
+
 export async function findTransfertByCle(cle: string): Promise<TransfertRow | undefined> {
   const rs = await db.execute({ sql: 'SELECT * FROM transferts WHERE cle_correspondance = @cle', args: { cle } });
   return rs.rows[0] ? toTransfertRow(rs.rows[0]) : undefined;
