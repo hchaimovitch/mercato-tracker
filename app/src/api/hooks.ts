@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { deleteRequest, fetchJson, postJson } from './client';
+import type { TransferType } from '../components/TypeFilterRow';
 import type {
   Alerte,
   AlerteType,
@@ -24,10 +25,10 @@ export function useLeagues() {
   return useQuery({ queryKey: ['leagues'], queryFn: () => fetchJson<League[]>('/leagues') });
 }
 
-export function useFeed(window: WindowId, league?: LeagueId) {
+export function useFeed(window: WindowId, league?: LeagueId, type?: TransferType) {
   return useQuery({
-    queryKey: ['transfers', window, league ?? 'all'],
-    queryFn: () => fetchJson<TransferCard[]>('/transfers', { window, league }),
+    queryKey: ['transfers', window, league ?? 'all', type ?? 'all'],
+    queryFn: () => fetchJson<TransferCard[]>('/transfers', { window, league, type }),
   });
 }
 
