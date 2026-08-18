@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
-import { useAlertes, useClubsList, useCreateAlerte, useDeleteAlerte, useJoueursSuggestions } from '../api/hooks';
-import type { AlerteType } from '../api/types';
+import { useAlertes, useClubsList, useCreateAlerte, useDeleteAlerte, useJoueursSuggestions, useLeagues } from '../api/hooks';
+import type { AlerteType, LeagueId } from '../api/types';
 import { ClubBadge } from '../components/ClubBadge';
 import { EmptyState } from '../components/EmptyState';
 import { GlowButton } from '../components/GlowButton';
 import { HeaderGradient } from '../components/HeaderGradient';
+import { LeagueChipRow } from '../components/LeagueChipRow';
 import { ErrorView, LoadingView } from '../components/ScreenState';
 import { usePushToken } from '../storage/PushTokenProvider';
 import { colors } from '../theme/colors';
@@ -16,6 +17,7 @@ export function AlertesScreen() {
   const [type, setType] = useState<AlerteType>('joueur');
   const [joueurNom, setJoueurNom] = useState('');
   const [joueurRecherche, setJoueurRecherche] = useState('');
+  const [clubLeague, setClubLeague] = useState<LeagueId | undefined>(undefined);
   const [clubId, setClubId] = useState<number | null>(null);
 
   // Petit délai avant de lancer la recherche : évite une requête à chaque frappe.
@@ -25,6 +27,7 @@ export function AlertesScreen() {
   }, [joueurNom]);
 
   const alertesQuery = useAlertes(pushToken);
+  const leaguesQuery = useLeagues();
   const clubsQuery = useClubsList();
   const suggestionsQuery = useJoueursSuggestions(joueurRecherche);
   const suggestions = (suggestionsQuery.data ?? []).slice(0, 6);
@@ -32,6 +35,11 @@ export function AlertesScreen() {
   const deleteAlerte = useDeleteAlerte(pushToken);
 
   const clubsParId = new Map((clubsQuery.data ?? []).map((c) => [c.id, c]));
+  // 98 clubs à plat était ingérable à la recherche — on filtre d'abord par
+  // championnat (comme suggéré), la liste de clubs se réduit à ~14-20 ensuite.
+  const clubsAffiches = clubLeague
+    ? (clubsQuery.data ?? []).filter((c) => c.championnatId === clubLeague)
+    : (clubsQuery.data ?? []);
 
   const onCreate = () => {
     if (type === 'joueur') {
@@ -99,17 +107,22 @@ export function AlertesScreen() {
                 )}
               </View>
             ) : (
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.clubRow}>
-                {(clubsQuery.data ?? []).map((c) => {
-                  const active = c.id === clubId;
-                  return (
-                    <Pressable key={c.id} onPress={() => setClubId(c.id)} style={[styles.clubChip, active && styles.clubChipActive]}>
-                      <ClubBadge abbr={c.abbr} color={c.couleur} logoUrl={c.logoUrl} size={26} radius={7} />
-                      <Text style={styles.clubChipText} numberOfLines={1}>{c.nom}</Text>
-                    </Pressable>
-                  );
-                })}
-              </ScrollView>
+              <View style={{ gap: 10 }}>
+                {leaguesQuery.data && (
+                  <LeagueChipRow leagues={leaguesQuery.data} value={clubLeague} onChange={setClubLeague} />
+                )}
+                <View style={styles.clubGrid}>
+                  {clubsAffiches.map((c) => {
+                    const active = c.id === clubId;
+                    return (
+                      <Pressable key={c.id} onPress={() => setClubId(c.id)} style={[styles.clubChip, active && styles.clubChipActive]}>
+                        <ClubBadge abbr={c.abbr} color={c.couleur} logoUrl={c.logoUrl} size={26} radius={7} />
+                        <Text style={styles.clubChipText} numberOfLines={1}>{c.nom}</Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+              </View>
             )}
 
             <GlowButton label={createAlerte.isPending ? 'Création…' : "Créer l'alerte"} onPress={onCreate} />
@@ -178,10 +191,10 @@ const styles = StyleSheet.create({
   },
   suggestionRow: { paddingHorizontal: 13, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: colors.borderSoft },
   suggestionText: { fontFamily: manrope(600), fontSize: 13.5, color: colors.textSecondary },
-  clubRow: { gap: 8, paddingVertical: 2 },
+  clubGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   clubChip: {
     flexDirection: 'row', alignItems: 'center', gap: 7, height: 38, paddingHorizontal: 11,
-    borderRadius: 19, borderWidth: 1, borderColor: colors.borderStrong, backgroundColor: colors.bgChip, maxWidth: 150,
+    borderRadius: 19, borderWidth: 1, borderColor: colors.borderStrong, backgroundColor: colors.bgChip, maxWidth: 170,
   },
   clubChipActive: { borderColor: colors.amber, backgroundColor: 'rgba(245,179,1,0.12)' },
   clubChipText: { fontFamily: manrope(600), fontSize: 12, color: colors.textSecondary, flexShrink: 1 },
