@@ -2,7 +2,7 @@ import cron from 'node-cron';
 import { synchroniserTransfertsOfficiels } from './apiFootball.sync.js';
 import { synchroniserRumeurs } from './sportmonks.sync.js';
 import { synchroniserRumeursRss } from './rssRumeurs.sync.js';
-import { synchroniserMontantsTransfermarkt } from './transfermarktDataset.js';
+import { synchroniserTransfermarkt } from './transfermarktDataset.js';
 
 async function runSyncCycle() {
   try {
@@ -36,15 +36,15 @@ export function demarrerPlanificateur(): void {
 
   // Le dataset Transfermarkt n'est rafraîchi qu'une fois par semaine côté source
   // (voir transfermarktDataset.ts) — inutile de le retélécharger plus souvent.
-  const expressionMontants = process.env.TRANSFERMARKT_DATASET_CRON || '0 3 * * 1';
-  console.log(`[scheduler] complétion des montants (Transfermarkt) planifiée : "${expressionMontants}"`);
-  cron.schedule(expressionMontants, () => {
-    synchroniserMontantsTransfermarkt().catch((err) => console.error('[scheduler] échec complétion montants :', err));
+  const expressionTransfermarkt = process.env.TRANSFERMARKT_DATASET_CRON || '0 3 * * 1';
+  console.log(`[scheduler] synchronisation Transfermarkt (officiels + montants) planifiée : "${expressionTransfermarkt}"`);
+  cron.schedule(expressionTransfermarkt, () => {
+    synchroniserTransfermarkt().catch((err) => console.error('[scheduler] échec sync Transfermarkt :', err));
   });
 
   if (process.env.SYNC_ON_STARTUP !== 'false') {
     console.log('[scheduler] premier passage de synchronisation au démarrage…');
     runSyncCycle();
-    synchroniserMontantsTransfermarkt().catch((err) => console.error('[scheduler] échec complétion montants :', err));
+    synchroniserTransfermarkt().catch((err) => console.error('[scheduler] échec sync Transfermarkt :', err));
   }
 }

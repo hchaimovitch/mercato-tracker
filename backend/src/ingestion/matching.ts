@@ -1,6 +1,6 @@
 import { historiquePourTransfert, ajouterHistorique } from '../repo/historique.repo.js';
 import { upsertSource } from '../repo/sources.repo.js';
-import { findTransfertByCle, getTransfert, insererTransfert, mettreAJourJoueurApiFootballId, mettreAJourStatut } from '../repo/transferts.repo.js';
+import { findTransfertByCle, getTransfert, insererTransfert, mettreAJourJoueurApiFootballId, mettreAJourStatut, trouverTransfertApprochant } from '../repo/transferts.repo.js';
 import { recalculerScoreTransfert, resoudreTransfert } from '../domain/cascade.js';
 import { STATUT_LABEL, STATUT_STEP } from '../domain/statutMapping.js';
 import { listerToutesAlertes } from '../repo/alertes.repo.js';
@@ -92,6 +92,13 @@ export interface CitationEntrante {
 export async function enregistrerCitation(c: CitationEntrante): Promise<number> {
   const cle = cleCorrespondance(c.joueur, c.clubSortantId, c.clubEntrantId, c.fenetreId);
   let transfert = await findTransfertByCle(cle);
+
+  // Repli par nom de famille si la clé exacte (nom complet) ne trouve rien —
+  // voir trouverTransfertApprochant pour le pourquoi (formats de nom différents
+  // selon le fournisseur pour une même transaction réelle).
+  if (!transfert) {
+    transfert = await trouverTransfertApprochant(nomDeFamille(c.joueur), c.clubSortantId, c.clubEntrantId, c.fenetreId);
+  }
   const preexistant = !!transfert;
 
   if (!transfert) {

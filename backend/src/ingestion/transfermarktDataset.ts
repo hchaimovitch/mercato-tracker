@@ -1,15 +1,23 @@
 import { gunzipSync } from 'node:zlib';
 import { parse } from 'csv-parse/sync';
-import { getClub } from '../repo/clubs.repo.js';
+import { fenetrePourDate } from '../repo/fenetres.repo.js';
+import { getClub, listerClubsBig5, listerTousLesClubs, normaliserNomClub } from '../repo/clubs.repo.js';
 import { listerTransfertsSansMontant, mettreAJourMontant } from '../repo/transferts.repo.js';
+import { enregistrerCitation } from './matching.js';
+import type { LeagueId } from '../types.js';
 
 /**
  * Jeu de données CC0-1.0 publié par https://github.com/dcaribou/transfermarkt-datasets
  * (scraping + republication déjà faits par ce tiers, rafraîchis chaque semaine par leur
  * propre pipeline). On ne fait ici que télécharger un fichier déjà publié — aucune requête
- * n'est jamais envoyée à transfermarkt.com depuis ce backend. Utilisé uniquement pour
- * compléter le montant des transferts déjà connus via API-Football (qui ne fournit pas ce
- * champ sur l'offre gratuite), jamais pour créer de nouveaux transferts.
+ * n'est jamais envoyée à transfermarkt.com depuis ce backend.
+ *
+ * Sert à deux choses : (1) créer les transferts officiels qu'API-Football ne fournit
+ * pas ou plus (compte suspendu au moment où ce module est écrit — voir README), et
+ * (2) compléter le montant des transferts déjà connus par ailleurs. Les deux tournent
+ * en parallèle sans créer de doublons quand un même transfert est vu par API-Football
+ * ET Transfermarkt (voir trouverTransfertApprochant dans matching.ts, qui absorbe les
+ * différences de format de nom entre fournisseurs).
  */
 const URL_TRANSFERTS = 'https://pub-e682421888d945d684bcae8890b0ec20.r2.dev/data/transfers.csv.gz';
 
@@ -68,25 +76,81 @@ async function telechargerLignes(): Promise<LigneTransfermarkt[]> {
 }
 
 /**
- * Complète le montant des transferts déjà enregistrés (via API-Football) qui n'en ont pas.
+ * Crée les transferts officiels absents de la base à partir des lignes qui concernent
+ * un club Big 5. Ne retient une ligne que si l'autre club (sortant ou entrant) est déjà
+ * identifiable dans notre table clubs (Big 5 ou déjà connu hors Big 5 via API-Football) —
+ * s'il ne l'est pas, on ignore plutôt que d'inventer un club à partir du seul nom
+ * Transfermarkt (pas d'id fiable pour lui donner un logo, risque de doublon avec un club
+ * déjà créé sous un nom légèrement différent).
+ */
+async function creerTransfertsOfficiels(lignes: LigneTransfermarkt[]): Promise<void> {
+  const clubsBig5 = await listerClubsBig5();
+  const clubsTous = await listerTousLesClubs();
+  const indexBig5 = new Map(clubsBig5.map((c) => [normaliserNomClub(c.nom), c]));
+  const indexTous = new Map(clubsTous.map((c) => [normaliserNomClub(c.nom), c]));
+
+  let traites = 0;
+  let ignoresAutreClubInconnu = 0;
+  let ignoresHorsFenetre = 0;
+  const echantillonAutreClubInconnu: { joueur: string; from: string; to: string }[] = [];
+
+  for (const l of lignes) {
+    const sortantBig5 = indexBig5.get(normaliserNomClub(l.fromClubName));
+    const entrantBig5 = indexBig5.get(normaliserNomClub(l.toClubName));
+    if (!sortantBig5 && !entrantBig5) continue; // aucun club Big 5 des deux côtés, hors sujet
+
+    const clubSortant = sortantBig5 ?? indexTous.get(normaliserNomClub(l.fromClubName));
+    const clubEntrant = entrantBig5 ?? indexTous.get(normaliserNomClub(l.toClubName));
+    if (!clubSortant || !clubEntrant) {
+      ignoresAutreClubInconnu++;
+      if (echantillonAutreClubInconnu.length < 15) {
+        echantillonAutreClubInconnu.push({ joueur: l.playerName, from: l.fromClubName, to: l.toClubName });
+      }
+      continue;
+    }
+
+    const fenetre = await fenetrePourDate(l.transferDate);
+    if (!fenetre) { ignoresHorsFenetre++; continue; }
+
+    const championnatId = (entrantBig5 ?? sortantBig5)!.championnat_id as LeagueId;
+
+    await enregistrerCitation({
+      joueur: l.playerName,
+      clubSortantId: clubSortant.id,
+      clubEntrantId: clubEntrant.id,
+      championnatId,
+      fenetreId: fenetre.id,
+      statutPropose: 'officiel',
+      montant: l.transferFeeEur !== null ? formatMontant(l.transferFeeEur) : null,
+      date: l.transferDate,
+      sourceNom: 'Transfermarkt (dataset)',
+      sourceCategorie: 'media_generaliste',
+      origine: 'automatique_api',
+    });
+    traites++;
+  }
+
+  console.log(
+    `[transfermarkt-dataset] officiels : ${traites} transfert(s) Big 5 traité(s) sur ${lignes.length} lignes du dataset ` +
+    `(${ignoresAutreClubInconnu} avec l'autre club non identifié, ${ignoresHorsFenetre} hors fenêtre suivie)`
+  );
+  if (echantillonAutreClubInconnu.length > 0) {
+    console.log(`[transfermarkt-dataset] échantillon de clubs non identifiés (officiels) : ${JSON.stringify(echantillonAutreClubInconnu)}`);
+  }
+}
+
+/**
+ * Complète le montant des transferts déjà enregistrés qui n'en ont pas.
  * Correspondance par nom de famille du joueur (voir cleJoueur), désambiguïsée par le nom du
  * club (dans un sens ou l'autre) car Transfermarkt utilise son propre espace d'identifiants,
  * sans lien avec ceux d'API-Football. Comme pour la correspondance SportMonks : en cas de
  * doute (plusieurs candidats, aucun club qui corresponde), on ignore plutôt que de risquer un
  * mauvais montant.
  */
-export async function synchroniserMontantsTransfermarkt(): Promise<void> {
+async function completerMontants(lignes: LigneTransfermarkt[]): Promise<void> {
   const sansMontant = await listerTransfertsSansMontant();
   if (sansMontant.length === 0) {
-    console.log('[transfermarkt-dataset] rien à compléter');
-    return;
-  }
-
-  let lignes: LigneTransfermarkt[];
-  try {
-    lignes = await telechargerLignes();
-  } catch (err) {
-    console.error('[transfermarkt-dataset] échec du téléchargement :', err);
+    console.log('[transfermarkt-dataset] montants : rien à compléter');
     return;
   }
 
@@ -160,7 +224,7 @@ export async function synchroniserMontantsTransfermarkt(): Promise<void> {
   }
 
   console.log(
-    `[transfermarkt-dataset] ${completes}/${sansMontant.length} montants complétés ` +
+    `[transfermarkt-dataset] montants : ${completes}/${sansMontant.length} complétés ` +
     `(joueur introuvable dans le dataset : ${aucunJoueur}, club non reconnu : ${aucunClub}, ambigu : ${ambigu}, ` +
     `montant inconnu côté Transfermarkt aussi : ${montantInconnuCoteSource})`
   );
@@ -173,4 +237,18 @@ export async function synchroniserMontantsTransfermarkt(): Promise<void> {
   if (completions.length > 0) {
     console.log(`[transfermarkt-dataset] montants complétés : ${JSON.stringify(completions)}`);
   }
+}
+
+/** Un seul téléchargement du dataset (hebdomadaire côté source), partagé par les deux passages. */
+export async function synchroniserTransfermarkt(): Promise<void> {
+  let lignes: LigneTransfermarkt[];
+  try {
+    lignes = await telechargerLignes();
+  } catch (err) {
+    console.error('[transfermarkt-dataset] échec du téléchargement :', err);
+    return;
+  }
+
+  await creerTransfertsOfficiels(lignes);
+  await completerMontants(lignes);
 }

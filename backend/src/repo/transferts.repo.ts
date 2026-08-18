@@ -36,6 +36,23 @@ export async function getTransfert(id: number): Promise<TransfertRow | undefined
   return rs.rows[0] ? toTransfertRow(rs.rows[0]) : undefined;
 }
 
+/**
+ * Repli quand la clé de correspondance exacte (cleCorrespondance) ne trouve rien :
+ * deux fournisseurs peuvent écrire le même joueur différemment (API-Football abrège
+ * en "A. Cozier-Duberry", Transfermarkt écrit "Archie Cozier-Duberry") — sans ce
+ * repli par nom de famille, chaque fournisseur créerait sa propre fiche pour la
+ * même transaction réelle. `IS` (pas `=`) pour matcher aussi quand un club est NULL.
+ */
+export async function trouverTransfertApprochant(nomDeFamille: string, clubSortantId: number | null, clubEntrantId: number | null, fenetreId: string): Promise<TransfertRow | undefined> {
+  const rs = await db.execute({
+    sql: `SELECT * FROM transferts WHERE fenetre_id = @fenetre_id
+          AND club_sortant_id IS @club_sortant_id AND club_entrant_id IS @club_entrant_id
+          AND joueur LIKE @motif`,
+    args: { fenetre_id: fenetreId, club_sortant_id: clubSortantId, club_entrant_id: clubEntrantId, motif: `%${nomDeFamille}%` },
+  });
+  return rs.rows[0] ? toTransfertRow(rs.rows[0]) : undefined;
+}
+
 export interface NouveauTransfert {
   joueur: string;
   joueurApiFootballId?: number | null;

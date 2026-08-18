@@ -33,6 +33,12 @@ export async function listerClubsBig5(): Promise<ClubRow[]> {
   return rs.rows.map(toClubRow);
 }
 
+/** Big 5 + clubs hors Big 5 déjà connus (créés côté API-Football) — voir transfermarktDataset.ts. */
+export async function listerTousLesClubs(): Promise<ClubRow[]> {
+  const rs = await db.execute('SELECT * FROM clubs ORDER BY nom');
+  return rs.rows.map(toClubRow);
+}
+
 /**
  * Couleur d'affichage assignée déterministiquement — sert de fallback pour le
  * badge à initiales quand aucun logo n'est disponible (usage strictement
@@ -75,7 +81,7 @@ export async function resoudreOuCreerClubExterne(apiFootballId: number, nom: str
   return upsertClubFromApiFootball(nom, LIGUE_EXTERNE, apiFootballId, logoUrl);
 }
 
-function normaliserNomClub(nom: string): string {
+export function normaliserNomClub(nom: string): string {
   return nom
     .normalize('NFD')
     .replace(/[̀-ͯ]/g, '')
